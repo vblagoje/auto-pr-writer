@@ -8,26 +8,22 @@ jobs:
   generate-pr-text:
     runs-on: ubuntu-latest
     steps:
-    - name: Post Placeholder Comment
-      uses: peter-evans/create-or-update-comment@v3
-      with:
-        issue-number: ${{ github.event.pull_request.number }}
-        body: Generating PR text, please wait...
-      id: placeholder_comment
-
     - name: Simulate PR Text Generation
       run: |
-        echo "Generating PR text, please wait 20-40 sec...."
+        echo "Generating PR text...."
         sleep 15  # Waits for 15 seconds
         echo "Source Branch: ${{ github.event.pull_request.head.ref }}"
         echo "Target Branch: ${{ github.event.pull_request.base.ref }}"
       id: simulate_pr_text_generation
 
-    - name: Update Comment with PR Branch Details
-      uses: peter-evans/create-or-update-comment@v3
-      with:
-        comment-id: ${{ steps.placeholder_comment.outputs.comment-id }}
-        body: |
-          PR text generation simulation complete.
-          Source Branch: ${{ github.event.pull_request.head.ref }}
-          Target Branch: ${{ github.event.pull_request.base.ref }}
+    - name: Update PR Body with Generated Text
+      run: |
+        PR_AUTHOR="${{ github.event.pull_request.user.login }}"
+        PR_TEXT="Generated Text for PR by $PR_AUTHOR\n\nDetails:\nSource Branch: ${{ github.event.pull_request.head.ref }}\nTarget Branch: ${{ github.event.pull_request.base.ref }}"
+        PR_BODY="{\"body\":\"$PR_TEXT\"}"
+        curl \
+          -X PATCH \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -H "Content-Type: application/json" \
+          -d "$PR_BODY" \
+          "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}"
