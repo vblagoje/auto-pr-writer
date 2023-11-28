@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Post Placeholder Comment
-      uses: peter-evans/create-or-update-comment@v1
+      uses: peter-evans/create-or-update-comment@v3
       with:
         issue-number: ${{ github.event.pull_request.number }}
         body: Generating PR text, please wait...
@@ -24,7 +24,7 @@ jobs:
       id: simulate_pr_text_generation
 
     - name: Update Comment with PR Branch Details
-      uses: peter-evans/create-or-update-comment@v1
+      uses: peter-evans/create-or-update-comment@v3
       with:
         comment-id: ${{ steps.placeholder_comment.outputs.comment-id }}
         body: |
