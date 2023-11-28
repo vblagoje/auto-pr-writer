@@ -1,0 +1,17 @@
+name: Pull Request Text Generator Workflow
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  generate-pr-text:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Run auto-pr-writer action
+        uses: ./
+        with:
+          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
