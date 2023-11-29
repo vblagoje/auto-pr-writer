@@ -19,6 +19,8 @@ To use `auto-pr-writer` in your project, follow these steps:
 
 ## Contributions
 Contributions to `auto-pr-writer` are welcome! Whether it's feature requests, bug reports, or code contributions, please feel free to open an issue or submit a pull request.
+We are looking forward to your feedback!
+
 
 ## License
 This project is licensed under [Apache 2.0 License](LICENSE).
