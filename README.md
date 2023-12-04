@@ -1,24 +1,68 @@
-# auto-pr-writer
-Automatically generate comprehensive Pull Request descriptions
+# Auto PR Writer
 
-This GitHub Action, `auto-pr-writer`, automates the creation of comprehensive and informative descriptions for your Pull Requests (PRs) based on the changes made in the PR.
+## Description
+Auto PR Writer is a GitHub Action designed to generate pull request descriptions automatically using Large Language Models (LLMs). It can be customized with system and user-provided prompts to tailor the PR description generation.
 
-## Features
-- **Automatic Generation**: Upon opening a new PR, `auto-pr-writer` kicks in to generate a detailed description.
-- **Customizable**: The generated text is customizable, allowing you to make adjustments after it's been added.
-- **Time-Saving**: Reduces the manual effort required in crafting PR descriptions, especially for large changes.
+## Inputs
 
-## How It Works
-When a new PR is opened in your repository, `auto-pr-writer` will be triggered. Approximately 30 seconds after the PR is created, it will automatically populate the PR's description field with a generated text that summarizes the changes and provides relevant details.
+### `system`
+**Optional**  
+System message/prompt to help the model generate the PR description.
 
-## Getting Started
-To use `auto-pr-writer` in your project, follow these steps:
-1. **Add the Action**: Include `auto-pr-writer` in your `.github/workflows` directory.
-2. **Create a PR Template**: Set up a PR template in your repository as outlined above.
-3. **Open a PR**: Simply open a PR, and `auto-pr-writer` will automatically generate the description.
+### `instruction`
+**Optional**  
+Additional prompt to help the model generate the PR description.
 
-## Contributions
-Contributions to `auto-pr-writer` are welcome! Whether it's feature requests, bug reports, or code contributions, please feel free to open an issue or submit a pull request.
+## Environment Variables
+
+- `OPENAI_API_KEY`: Your OpenAI API key, used to authenticate requests to OpenAI's APIs.
+- `GITHUB_TOKEN`: GitHub token used to authenticate requests to GitHub API for updating PR descriptions.
+- `PR_NUMBER`: The pull request number where the action is run.
+- `GITHUB_REPOSITORY`: The repository where the pull request is made.
+- `BASE_REF`: The base branch in the pull request.
+- `HEAD_REF`: The head branch in the pull request.
+
+## Usage
+
+Add the following step to your GitHub Actions workflow:
+
+```yaml
+steps:
+  - name: Auto PR Writer
+    uses: vblagoje/auto-pr-writer@v1    
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+Ensure you have set the `OPENAI_API_KEY` in your repository's secrets.
+
+## Example
+
+Here's an example of how to use the Auto PR Writer in a pull request workflow:
+
+```yaml
+on: pull_request
+  types: [opened]
+
+jobs:
+  auto-pr-job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Auto PR Writer
+        uses: vblagoje/auto-pr-writer@v1        
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+## Contributing
+
+If you have suggestions for improving Auto PR Writer or want to report a bug, open an issue, or make a pull request.
+ease feel free to open an issue or submit a pull request.
 
 ## License
 This project is licensed under [Apache 2.0 License](LICENSE).
