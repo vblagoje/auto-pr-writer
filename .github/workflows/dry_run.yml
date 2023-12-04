@@ -2,7 +2,9 @@ name: Pull Request Text Generator Workflow
 
 on:
   pull_request:
-    types: [opened]
+    types: [opened, edited, reopened]
+  issue_comment:
+    types: [created]
 
 jobs:
   generate-pr-text:
@@ -11,7 +13,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Run auto-pr-writer action
+      - name: Run for PR
+        if: github.event_name == 'pull_request'
         uses: ./
         with:
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+          instruction: ${{ github.event.pull_request.body }}
+      - name: Run for comment
+        if: github.event_name == 'issue_comment' && github.event.issue.pull_request
+        uses: ./
+        with:
+          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+          instruction: ${{ github.event.comment.body }}
