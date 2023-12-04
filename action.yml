@@ -5,6 +5,24 @@ branding:
   icon: edit-2
   color: blue
 inputs:
+  openai_api_key:
+    description: OpenAI API key
+    default: ${{ secrets.OPENAI_API_KEY }}
+  github_token:
+    description: GITHUB_TOKEN or a repo scoped PAT
+    default: ${{ github.token }}
+  pull_request_number:
+    description: Pull request number
+    default: ${{ github.event.pull_request.number }}
+  github_repository:
+    description: GitHub repository
+    default: ${{ github.repository }}
+  target_branch:
+    description: Target branch
+    default: ${{ github.event.pull_request.base.ref }}
+  source_branch:
+    description: Source branch
+    default: ${{ github.event.pull_request.head.ref }}
   system:
     description: System message/prompt to help the model generate the PR description
     required: false
@@ -12,14 +30,14 @@ inputs:
     description: Additional prompt to help the model generate the PR description
     required: false
 runs:
-  using: docker
-  image: docker://vblagoje/auto-pr-writer:latest
+  using: 'docker'
+  image: 'docker://vblagoje/auto-pr-writer:latest'
   env:
-    OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    PR_NUMBER: ${{ github.event.pull_request.number }}
-    GITHUB_REPOSITORY: ${{ github.repository }}
-    BASE_REF: ${{ github.event.pull_request.base.ref  }}
-    HEAD_REF: ${{ github.event.pull_request.head.ref  }}
+    OPENAI_API_KEY: ${{ inputs.openai_api_key }}
+    GITHUB_TOKEN: ${{ inputs.github_token }}
+    PR_NUMBER: ${{ inputs.pull_request_number }}
+    GITHUB_REPOSITORY: ${{ inputs.github_repository }}
+    BASE_REF: ${{ inputs.target_branch }}
+    HEAD_REF: ${{ inputs.source_branch }}
     AUTO_PR_WRITER_SYSTEM_MESSAGE: ${{ inputs.system }}
     AUTO_PR_WRITER_USER_MESSAGE: ${{ inputs.instruction }}
