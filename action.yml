@@ -1,0 +1,22 @@
+name: "Auto PR Writer"
+description: "Automatically generate PR descriptions using LLMs"
+inputs:
+  system:
+    description: "System message/prompt to help the model generate the PR description"
+    required: false
+  instruction:
+    description: "Additional prompt to help the model generate the PR description"
+    required: false
+
+runs:
+  using: "docker"
+  image: "docker://vblagoje/auto-pr-writer:latest"
+  env:
+    OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    PR_NUMBER: ${{ github.event.pull_request.number }}
+    GITHUB_REPOSITORY: ${{ github.repository }}
+    BASE_REF: ${{ github.event.pull_request.base.ref  }}
+    HEAD_REF: ${{ github.event.pull_request.head.ref  }}
+    AUTO_PR_WRITER_SYSTEM_MESSAGE: ${{ inputs.system }}
+    AUTO_PR_WRITER_INSTRUCTION: ${{ inputs.instruction }}
