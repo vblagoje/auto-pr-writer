@@ -1,16 +1,19 @@
-name: "Auto PR Writer"
-description: "Automatically generate PR descriptions using LLMs"
+name: auto-pr-writer
+description: Automatically generate PR descriptions using LLMs
+author: Vladimir Blagojevic
+branding:
+  icon: edit-2
+  color: blue
 inputs:
   system:
-    description: "System message/prompt to help the model generate the PR description"
+    description: System message/prompt to help the model generate the PR description
     required: false
   instruction:
-    description: "Additional prompt to help the model generate the PR description"
+    description: Additional prompt to help the model generate the PR description
     required: false
-
 runs:
-  using: "docker"
-  image: "docker://vblagoje/auto-pr-writer:latest"
+  using: docker
+  image: docker://vblagoje/auto-pr-writer:latest
   env:
     OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
