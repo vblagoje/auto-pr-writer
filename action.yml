@@ -19,4 +19,4 @@ runs:
     BASE_REF: ${{ github.event.pull_request.base.ref  }}
     HEAD_REF: ${{ github.event.pull_request.head.ref  }}
     AUTO_PR_WRITER_SYSTEM_MESSAGE: ${{ inputs.system }}
-    AUTO_PR_WRITER_INSTRUCTION: ${{ inputs.instruction }}
+    AUTO_PR_WRITER_USER_MESSAGe: ${{ inputs.instruction }}
