@@ -13,3 +13,5 @@ jobs:
 
       - name: Run auto-pr-writer action
         uses: ./
+        with:
+          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
