@@ -5,35 +5,35 @@ Auto PR Writer is a GitHub Action designed to automatically generate pull reques
 
 ## Inputs
 
-### `openai_api_key`
+#### `openai_api_key`
 **Required**
 The OpenAI API key for authentication.
 
-### `github_token`
+#### `github_token`
 **Optional**
 GITHUB_TOKEN or a repo scoped Personal Access Token (PAT). Defaults to the GitHub token provided by the GitHub Actions runner.
 
-### `pull_request_number`
+#### `pull_request_number`
 **Optional**
 The number of the pull request where the action is run. Defaults to the current PR number.
 
-### `github_repository`
+#### `github_repository`
 **Optional**
 The GitHub repository where the pull request is made. Defaults to the current repository.
 
-### `target_branch`
+#### `target_branch`
 **Optional**
 The target branch in the pull request. Defaults to the base branch of the current PR.
 
-### `source_branch`
+#### `source_branch`
 **Optional**
 The source branch in the pull request. Defaults to the head branch of the current PR.
 
-### `system`
+#### `system`
 **Optional**
 System message/prompt to help the model generate the PR description.
 
-### `instruction`
+#### `instruction`
 **Optional**
 Additional prompt to help the model generate the PR description.
 
@@ -57,13 +57,59 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Run auto-pr-writer action
         uses: vblagoje/auto-pr-writer@v1
         with:
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
 ```
+
+## Advanced Example Workflow
+
+Here's an advanced example of how to use the Auto PR Writer in a pull request workflow:
+
+```yaml
+name: Pull Request Text Generator Workflow
+
+on:
+  pull_request:
+    types: [opened, edited, reopened]
+  issue_comment:
+    types: [created]
+
+jobs:
+  generate-pr-text:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run for PR
+        if: github.event_name == 'pull_request'
+        uses: vblagoje/auto-pr-writer@v1
+        with:
+          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+          instruction: ${{ github.event.pull_request.body }}      
+      - name: Fetch PR details for comment event
+        if: github.event_name == 'issue_comment' && github.event.issue.pull_request
+        id: pr_details
+        uses: octokit/request-action@v2.x
+        with:
+          route: GET /repos/${{ github.repository }}/pulls/${{ github.event.issue.number }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run for comment
+        if: github.event_name == 'issue_comment' && github.event.issue.pull_request
+        uses: vblagoje/auto-pr-writer@v1
+        with:
+          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+          instruction: ${{ github.event.comment.body }}
+          target_branch: ${{ fromJson(steps.pr_details.outputs.data).base.ref }}
+          source_branch: ${{ fromJson(steps.pr_details.outputs.data).head.ref }}
+          pull_request_number: ${{ github.event.issue.number }}
+```
+This workflow will run the action on pull request open, edit, and reopen events. It will also run the action on issue comment events on pull requests. 
 
 ## Contributing
 
