@@ -38,3 +38,4 @@ jobs:
           instruction: ${{ github.event.comment.body }}
           target_branch: ${{ fromJson(steps.pr_details.outputs.data).base.ref }}
           source_branch: ${{ fromJson(steps.pr_details.outputs.data).head.ref }}
+          pull_request_number: ${{ github.event.issue.number }}
