@@ -3,43 +3,9 @@
 ## Description
 Auto PR Writer is a GitHub Action designed to automatically generate pull request descriptions using Large Language Models (LLMs). It can be customized with system and user-provided prompts to tailor the PR description generation.
 
-## Inputs
-
-#### `openai_api_key`
-**Required**
-The OpenAI API key for authentication.
-
-#### `github_token`
-**Optional**
-GITHUB_TOKEN or a repo scoped Personal Access Token (PAT). Defaults to the GitHub token provided by the GitHub Actions runner.
-
-#### `pull_request_number`
-**Optional**
-The number of the pull request where the action is run. Defaults to the current PR number.
-
-#### `github_repository`
-**Optional**
-The GitHub repository where the pull request is made. Defaults to the current repository.
-
-#### `target_branch`
-**Optional**
-The target branch in the pull request. Defaults to the base branch of the current PR.
-
-#### `source_branch`
-**Optional**
-The source branch in the pull request. Defaults to the head branch of the current PR.
-
-#### `system`
-**Optional**
-System message/prompt to help the model generate the PR description.
-
-#### `instruction`
-**Optional**
-Additional prompt to help the model generate the PR description.
-
 ## Usage
 
-Ensure you have set the `OPENAI_API_KEY` and `GITHUB_TOKEN` in your repository's secrets.
+Ensure you have set the `OPENAI_API_KEY` in your repository's secrets.
 
 ## Minimal Example Workflow
 
@@ -110,6 +76,42 @@ jobs:
           pull_request_number: ${{ github.event.issue.number }}
 ```
 This workflow will run the action on pull request open, edit, and reopen events. It will also run the action on issue comment events on pull requests. 
+
+
+## GitHub Action Inputs
+
+#### `openai_api_key`
+**Required**
+The OpenAI API key for authentication.
+
+#### `github_token`
+**Optional**
+GITHUB_TOKEN or a repo scoped Personal Access Token (PAT). Defaults to the GitHub token provided by the GitHub Actions runner.
+
+#### `pull_request_number`
+**Optional**
+The number of the pull request where the action is run. Defaults to the current PR number.
+
+#### `github_repository`
+**Optional**
+The GitHub repository where the pull request is made. Defaults to the current repository.
+
+#### `target_branch`
+**Optional**
+The target branch in the pull request. Defaults to the base branch of the current PR.
+
+#### `source_branch`
+**Optional**
+The source branch in the pull request. Defaults to the head branch of the current PR.
+
+#### `system`
+**Optional**
+System message/prompt to help the model generate the PR description.
+
+#### `instruction`
+**Optional**
+Additional prompt to help the model generate the PR description.
+
 
 ## Contributing
 
