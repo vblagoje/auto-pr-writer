@@ -117,5 +117,25 @@ Additional prompt to help the model generate the PR description.
 
 If you have suggestions for how Auto PR Writer could be improved, or want to report a bug, open an issue or a pull request.
 
+## Smoke Test for Docker Image
+
+To confirm the correct operation of the Docker image, perform a smoke test locally using the following steps:
+
+1. **Prepare Your OpenAI API Key**: Ensure you have your OpenAI API key ready for use.
+
+2. **Execute the Image**:
+   Run the following command in your terminal, replacing `<YOUR_OPENAI_API_KEY>` with your actual API key:
+
+   ```bash
+   docker run -e OPENAI_API_KEY=<YOUR_OPENAI_API_KEY> vblagoje/auto-pr-writer "Compare branches main and tools_update, in project deepset-ai, repo haystack"
+   ```
+
+   Modify the command "Compare branches main and tools_update, in project deepset-ai, repo haystack" according to the specific branches, project, and repository relevant to your test.
+
+3. **Check the Output**: After execution, verify the output to ensure the image functions as expected.
+
+This test will help you verify the basic functionality of the Docker image. Remember to adjust the command with the appropriate 
+project, repository, and branches you wish to compare, and ensure the security of your OpenAI API key throughout this process.
+
 ## License
 This project is licensed under [Apache 2.0 License](LICENSE).
