@@ -115,7 +115,12 @@ Additional prompt to help the model generate the PR description.
 
 ## Contributing
 
-If you have suggestions for how Auto PR Writer could be improved, or want to report a bug, open an issue or a pull request.
+If you have suggestions for improving Auto PR Writer or want to report a bug, please feel welcome to open an issue or a pull request. Here are some guidelines to help you contribute effectively:
+
+- **Framework Context**: Auto PR Writer has been developed using the Haystack 2.x framework. Please ensure any development or suggestions are compatible with Haystack features.
+- **Focus Areas**: All changes should primarily be focused on the `auto_pr_writer.py` and `action.yml` files. Make sure that modifications align with the overall design and functionality.
+- **Open an Issue**: For bugs, feature requests, or other discussions, start by opening an issue. Clearly describe the change you wish to make or the problem you're trying to solve.
+- **Submit a Pull Request**: If you're ready to contribute code or documentation, submit a pull request. Provide a clear description of the problem and a detailed explanation of your solution.
 
 ## Smoke Test for Docker Image
 
