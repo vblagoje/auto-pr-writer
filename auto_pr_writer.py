@@ -181,15 +181,15 @@ def main() -> str:
 
 
 if __name__ == "__main__":
-    result = main()
-    print(result)
+    generated_pr_text = main()
+    print(generated_pr_text)  # add verbose flag to print this only when verbose flag is set
 
     github_token = os.environ.get("GITHUB_TOKEN")
     github_repository = os.environ.get("GITHUB_REPOSITORY")
     pr_number = os.environ.get("PR_NUMBER")
 
-    if all([github_token, github_repository, pr_number, result]):
-        status_code, response = update_pr_description(github_repository, pr_number, result, github_token)
+    if all([github_token, github_repository, pr_number, generated_pr_text]):
+        status_code, response = update_pr_description(github_repository, pr_number, generated_pr_text, github_token)
         if status_code == 200:
             print(f"Successfully updated PR description for PR #{pr_number} in {github_repository}.")
         else:

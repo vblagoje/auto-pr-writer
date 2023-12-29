@@ -1,5 +1,4 @@
-# we'll change the from image to deepset/haystack:base-main once the latest PRs are merged and image is updated
-FROM vblagoje/haystack:base-main
+FROM deepset/haystack:base-main
 
 # Set the working directory in the container to /app
 WORKDIR /app
