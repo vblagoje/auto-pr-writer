@@ -1,5 +1,9 @@
 # Auto PR Writer
 
+![License](https://img.shields.io/github/license/vblagoje/auto-pr-writer)
+![Last Commit](https://img.shields.io/github/last-commit/vblagoje/auto-pr-writer)
+![Docker Pulls](https://img.shields.io/docker/pulls/vblagoje/auto-pr-writer)
+
 ## Description
 Auto PR Writer is a GitHub Action designed to automatically generate pull request descriptions using Large Language Models (LLMs). It can be customized with system and user-provided prompts to tailor the PR description generation.
 
