@@ -7,6 +7,8 @@
 ## Description
 Auto PR Writer is a GitHub Action designed to automatically generate pull request descriptions using Large Language Models (LLMs). It can be customized with system and user-provided prompts to tailor the PR description generation.
 
+![Auto PR Writer Demo](https://drive.google.com/uc?export=view&id=1bNdBktehnNIi8CzGzN6vbeOzaQFBtAv_)
+
 ## Usage
 
 Ensure you have set the `OPENAI_API_KEY` in your repository's secrets.
