@@ -11,7 +11,7 @@ Auto PR Writer is a GitHub Action designed to automatically generate pull reques
 
 ## Usage
 
-Ensure you have set the `OPENAI_API_KEY` in your repository's secrets.
+Ensure you have set the `OPENAI_API_KEY` in your repository's secrets. Add a default template for pull requests, clarifying that the pull request description will be automatically generated. Feel free to use our [example](https://github.com/vblagoje/auto-pr-writer/blob/main/.github/pull_request_template.md). Lastly, incorporate a workflow trigger for this GitHub Action. Refer to the Minimal and Advanced example workflows provided below.
 
 ## Minimal Example Workflow
 
@@ -126,13 +126,13 @@ If you have suggestions for improving Auto PR Writer or want to report a bug, pl
 - **Framework Context**: Auto PR Writer has been developed using the Haystack 2.x framework. Please ensure any development or suggestions are compatible with Haystack features.
 - **Focus Areas**: All changes should primarily be focused on the `auto_pr_writer.py` and `action.yml` files. Make sure that modifications align with the overall design and functionality.
 - **Open an Issue**: For bugs, feature requests, or other discussions, start by opening an issue. Clearly describe the change you wish to make or the problem you're trying to solve.
-- **Submit a Pull Request**: If you're ready to contribute code or documentation, submit a pull request. Provide a clear description of the problem and a detailed explanation of your solution.
+- **Submit a Pull Request**: Ready to contribute code or documentation? Submit a pull request. The description will be generated automatically, of course! :-)
 
 ## Smoke Test for Docker Image
 
 To confirm the correct operation of the Docker image, perform a smoke test locally using the following steps:
 
-1. **Prepare Your OpenAI API Key**: Ensure you have your OpenAI API key ready for use.
+1. **Prepare Your OpenAI API Key**: Ensure your OpenAI API key is ready for use.
 
 2. **Execute the Image**:
    Run the following command in your terminal, replacing `<YOUR_OPENAI_API_KEY>` with your actual API key:
