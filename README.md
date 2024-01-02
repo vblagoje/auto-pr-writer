@@ -118,13 +118,13 @@ The source branch in the pull request. Defaults to the head branch of the curren
 **Optional**
 The generation_model specifies the model to use for PR text generation. While it defaults to gpt-4-1106-preview from OpenAI, users have the flexibility to select from a range of models available from various LLM providers, including but not limited to fireworks.ai, together.xyz, anyscale, octoai, etc. This allows for more tailored and varied text generation capabilities to meet diverse needs and preferences.
 
-#### `system`
+#### `system_prompt`
 **Optional**
 System message/prompt to help the model generate the PR description.
 
-#### `instruction`
+#### `user_prompt`
 **Optional**
-Additional prompt to help the model generate the PR description.
+Additional user prompt to help the model generate the PR description.
 
 
 ## Contributing

@@ -30,10 +30,10 @@ inputs:
   generation_model:
     description: LLM to use for PR text generation
     default: gpt-4-1106-preview
-  system:
+  system_prompt:
     description: System message/prompt to help the model generate the PR description
     required: false
-  instruction:
+  user_prompt:
     description: Additional prompt to help the model generate the PR description
     required: false
 runs:
@@ -48,5 +48,5 @@ runs:
     BASE_REF: ${{ inputs.target_branch }}
     HEAD_REF: ${{ inputs.source_branch }}
     GENERATION_MODEL: ${{ inputs.generation_model }}
-    AUTO_PR_WRITER_SYSTEM_MESSAGE: ${{ inputs.system }}
-    AUTO_PR_WRITER_USER_MESSAGE: ${{ inputs.instruction }}
+    AUTO_PR_WRITER_SYSTEM_MESSAGE: ${{ inputs.system_prompt }}
+    AUTO_PR_WRITER_USER_MESSAGE: ${{ inputs.user_prompt }}
