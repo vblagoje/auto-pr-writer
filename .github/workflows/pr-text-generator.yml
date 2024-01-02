@@ -18,6 +18,8 @@ jobs:
         uses: ./
         with:
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+          openai_base_url: https://api.fireworks.ai/inference/v1
+          generation_model: accounts/fireworks/models/yi-34b-200k-capybara
           user_prompt: ${{ github.event.pull_request.body }}
       - name: Debug PR Number
         if: github.event_name == 'issue_comment' && github.event.issue.pull_request
@@ -35,7 +37,9 @@ jobs:
         uses: ./
         with:
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+          openai_base_url: https://api.fireworks.ai/inference/v1
           user_prompt: ${{ github.event.comment.body }}
           target_branch: ${{ fromJson(steps.pr_details.outputs.data).base.ref }}
           source_branch: ${{ fromJson(steps.pr_details.outputs.data).head.ref }}
           pull_request_number: ${{ github.event.issue.number }}
+          generation_model: accounts/fireworks/models/yi-34b-200k-capybara
