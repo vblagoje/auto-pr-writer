@@ -5,7 +5,7 @@
 ![Docker Pulls](https://img.shields.io/docker/pulls/vblagoje/auto-pr-writer)
 
 ## Description
-Auto PR Writer is a GitHub Action designed to automatically generate pull request descriptions using Large Language Models (LLMs). It can be customized with system and user-provided prompts to tailor the PR description generation.
+Auto PR Writer is a GitHub Action designed to automatically generate pull request descriptions using Large Language Models (LLMs). By default, it utilizes OpenAI's models, but it also supports integration with a variety of other LLM providers such as fireworks.ai, together.xyz, anyscale, octoai, etc., allowing users to select their preferred provider to best suit their needs. This action can be customized with system and user-provided prompts to tailor the PR description generation.
 
 ![Auto PR  Demo](https://raw.githubusercontent.com/vblagoje/various/main/auto-pr-writer-optimize.gif)
 
@@ -90,9 +90,9 @@ This workflow will run the action on pull request open, edit, and reopen events.
 **Required**
 The OpenAI API key for authentication.
 
-### `openai_base_url`
+#### `openai_base_url`
 **Optional**
-The base URL for the OpenAI API. Using this input one can use different LLM providers (e.g. fireworks.ai, together.xyz, anyscale, octoai etc.)
+The base URL for the OpenAI API. Using this input one can use different LLM providers (e.g. fireworks.ai, together.xyz, anyscale, octoai etc.) Defaults to https://api.openai.com/v1
 
 #### `github_token`
 **Optional**
@@ -116,7 +116,7 @@ The source branch in the pull request. Defaults to the head branch of the curren
 
 #### `generation_model`
 **Optional**
-The model to use for PR text generation. Defaults to `gpt-4-1106-preview`.
+The generation_model specifies the model to use for PR text generation. While it defaults to gpt-4-1106-preview from OpenAI, users have the flexibility to select from a range of models available from various LLM providers, including but not limited to fireworks.ai, together.xyz, anyscale, octoai, etc. This allows for more tailored and varied text generation capabilities to meet diverse needs and preferences.
 
 #### `system`
 **Optional**
@@ -146,10 +146,10 @@ To confirm the correct operation of the Docker image, perform a smoke test local
    Run the following command in your terminal, replacing `<YOUR_OPENAI_API_KEY>` with your actual API key:
 
    ```bash
-   docker run -e OPENAI_API_KEY=<YOUR_OPENAI_API_KEY> vblagoje/auto-pr-writer "deepset-ai/haystack main test/benchmarks2.0"
+   docker run -e OPENAI_API_KEY=<YOUR_OPENAI_API_KEY> vblagoje/auto-pr-writer deepset-ai/haystack main test/benchmarks2.0
    ```
 
-   Modify the command "deepset-ai/haystack main test/benchmarks2.0" according to the specific repository main and pr branches, project relevant to your use case.
+   Modify the parameters `deepset-ai/haystack main test/benchmarks2.0` according to the specific repository main and pr branches, relevant to your use case.
 
 3. **Check the Output**: After execution, verify the output to ensure the image functions as expected.
 
