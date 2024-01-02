@@ -90,6 +90,10 @@ This workflow will run the action on pull request open, edit, and reopen events.
 **Required**
 The OpenAI API key for authentication.
 
+### `openai_base_url`
+**Optional**
+The base URL for the OpenAI API. Using this input one can use different LLM providers (e.g. fireworks.ai, together.xyz, anyscale, octoai etc.)
+
 #### `github_token`
 **Optional**
 GITHUB_TOKEN or a repo scoped Personal Access Token (PAT). Defaults to the GitHub token provided by the GitHub Actions runner.
@@ -109,6 +113,10 @@ The target branch in the pull request. Defaults to the base branch of the curren
 #### `source_branch`
 **Optional**
 The source branch in the pull request. Defaults to the head branch of the current PR.
+
+#### `generation_model`
+**Optional**
+The model to use for PR text generation. Defaults to `gpt-4-1106-preview`.
 
 #### `system`
 **Optional**
