@@ -91,7 +91,10 @@ def generate_pr_text(github_repo: str, base_branch: str, pr_branch: str, model_n
 
     # generate the PR text
     gen_pipe = Pipeline()
-    gen_pipe.add_component("llm", OpenAIChatGenerator(model_name=model_name))
+
+    # empirically, max_tokens=2560 should be enough to generate a PR text
+    gen_pipe.add_component("llm", OpenAIChatGenerator(model_name=model_name,
+                                                            generation_kwargs={"max_tokens": 2560}))
 
     final_result = gen_pipe.run(data={"messages": github_pr_prompt_messages})
     return final_result["llm"]["replies"][0].content
