@@ -11,6 +11,7 @@ inputs:
   openai_base_url:
     description: OpenAI Base URL
     required: false
+    default: https://api.openai.com/v1
   github_token:
     description: GITHUB_TOKEN or a repo scoped PAT
     default: ${{ github.token }}
