@@ -8,21 +8,25 @@ import requests
 
 from haystack import Pipeline
 from haystack.components.connectors import OpenAPIServiceConnector
-from haystack.components.converters import OpenAPIServiceToFunctions
 from haystack.components.generators.chat import OpenAIChatGenerator
 from haystack.dataclasses import ChatMessage
 
 
-def generate_pr_text(user_instruction: str, custom_instruction: Optional[str] = None) -> str:
+def generate_pr_text(github_repo: str, base_branch: str, pr_branch: str,
+                     custom_instruction: Optional[str] = None) -> str:
     """
     Generates a GitHub Pull Request (PR) text based on user instructions.
 
-    :param user_instruction: A string containing the user's free text command for GitHub PR. For example,
-    "Create PR by comparing branches main and rag_services, in project deepset-ai, repo haystack".
-    :type user_instruction: str
-    :param custom_instruction: Optional custom instructions for PR text generation, like "Be brief, one sentence per section".
+    :param github_repo: The GitHub repository in the format 'owner/repo'.
+    :type github_repo: str
+    :param base_branch: The base branch of the PR.
+    :type base_branch: str
+    :param pr_branch: The PR branch.
+    :type pr_branch: str
+    :param custom_instruction: Optional custom instructions for PR text generation, like "Be brief, one
+    sentence per section".
     :type custom_instruction: Optional[str]
-    :return: A string containing the generated GitHub PR text in markdown format, structured into sections like Why,
+    :return: A string containing the generated GitHub PR text in Markdown format, structured into sections like Why,
     What, How to use, etc.
     :rtype: str
     :raises ValueError: If the OPENAI_API_KEY environment variable is not set.
@@ -61,26 +65,19 @@ def generate_pr_text(user_instruction: str, custom_instruction: Optional[str] = 
     if llm_api_key is None:
         raise ValueError("Please set OPENAI_API_KEY environment variable to your OpenAI API key.")
 
-    indexing_pipeline = Pipeline()
-    indexing_pipeline.add_component("spec_to_functions", OpenAPIServiceToFunctions())
-    results = indexing_pipeline.run(data={"sources": ["https://bit.ly/3tdRUM0"],
-                                          "system_messages": [requests.get("https://bit.ly/48eN0ND").text]})
-
-    top_1_document = results["spec_to_functions"]["documents"][0]
-    openai_functions_definition = json.loads(top_1_document.content)
-    openapi_spec = top_1_document.meta["spec"]
+    openapi_spec = requests.get("https://bit.ly/3tdRUM0").json()
 
     invoke_service_pipe = Pipeline()
-    invoke_service_pipe.add_component("functions_llm", OpenAIChatGenerator(model_name="gpt-3.5-turbo-0613"))
     invoke_service_pipe.add_component("openapi_container", OpenAPIServiceConnector())
-    invoke_service_pipe.connect("functions_llm.replies", "openapi_container.messages")
+    invocation_payload = create_invocation_payload(base_ref=base_branch,
+                                                   head_ref=pr_branch,
+                                                   repository=github_repo.split("/")[0],
+                                                   project=github_repo.split("/")[1])
 
-    tools_param = [{"type": "function", "function": openai_functions_definition}]
-    tool_choice = {"type": "function", "function": {"name": openai_functions_definition["name"]}}
-    service_response = invoke_service_pipe.run(data={"messages": [ChatMessage.from_user(user_instruction)],
-                                                     "generation_kwargs": {"tools": tools_param,
-                                                                           "tool_choice": tool_choice},
-                                                     "service_openapi_spec": openapi_spec})
+    invocation_payload = json.dumps([invocation_payload])
+    service_response = invoke_service_pipe.run(
+        data={"messages": [ChatMessage.from_assistant(invocation_payload)],
+              "service_openapi_spec": openapi_spec})
 
     github_service_response = service_response["openapi_container"]["service_response"]
     if custom_instruction:
@@ -98,7 +95,7 @@ def generate_pr_text(user_instruction: str, custom_instruction: Optional[str] = 
     return final_result["llm"]["replies"][0].content
 
 
-def update_pr_description(repo, pr_number, description, token) -> Tuple[int, Dict[str, Any]]:
+def update_pr_description(repo: str, pr_number_id: str, description: str, token: str) -> Tuple[int, Dict[str, Any]]:
     """
     Updates the description of a GitHub Pull Request.
 
@@ -107,8 +104,8 @@ def update_pr_description(repo, pr_number, description, token) -> Tuple[int, Dic
 
     :param repo: The GitHub repository in the format 'owner/repo'.
     :type repo: str
-    :param pr_number: The number of the pull request to be updated.
-    :type pr_number: str
+    :param pr_number_id: The number of the pull request to be updated.
+    :type pr_number_id: str
     :param description: The new description text for the pull request.
     :type description: str
     :param token: GitHub access token used for authentication.
@@ -116,7 +113,7 @@ def update_pr_description(repo, pr_number, description, token) -> Tuple[int, Dic
     :return: A tuple containing the status code of the response and the response JSON.
     :rtype: tuple
     """
-    url = f"https://api.github.com/repos/{repo}/pulls/{pr_number}"
+    url = f"https://api.github.com/repos/{repo}/pulls/{pr_number_id}"
     headers = {"Authorization": f"token {token}", "Content-Type": "application/json"}
     data = {"body": description}
     resp = requests.patch(url, headers=headers, data=json.dumps(data))
@@ -141,6 +138,19 @@ def extract_custom_instruction(user_instruction: str) -> str:
     return match.group(1) if match else ""
 
 
+def create_invocation_payload(base_ref, head_ref, repository, project):
+    invocation_payload = {
+        "id": "some_irrelevant_id",
+        "function": {
+            "arguments": f'{{"parameters": {{"basehead": "{base_ref}...{head_ref}", '
+                         f'"owner": "{repository}", "repo": "{project}"}}}}',
+            "name": "compare_branches"
+        },
+        "type": "function"
+    }
+    return invocation_payload
+
+
 def main() -> str:
     """
     Main function to generate and optionally update a GitHub PR description.
@@ -155,29 +165,23 @@ def main() -> str:
     :raises SystemExit: If the necessary command-line arguments or environment variables are not provided.
     """
 
-    main_user_instruction = ""
     if len(sys.argv) < 2:
         github_repo = os.environ.get("GITHUB_REPOSITORY")
         base_ref = os.environ.get("BASE_REF")
         head_ref = os.environ.get("HEAD_REF")
-        if all([github_repo, base_ref, head_ref]):
-            command = (
-                f"Compare branches {base_ref} and {head_ref}, in "
-                f"project {github_repo.split('/')[0]}, repo {github_repo.split('/')[1]}"
-            )
-            main_user_instruction = command
     else:
-        main_user_instruction = " ".join(sys.argv[1:])
+        github_repo, base_ref, head_ref = sys.argv[1:4]
 
-    if not main_user_instruction:
-        print(
-            "Please provide a free text GitHub PR command, e.g. Compare branches main and your_dev_branch, "
-            "in project deepset-ai, repo haystack"
-        )
+    if not all([github_repo, base_ref, head_ref]):
+        print("Please provide GITHUB_REPOSITORY, BASE_REF, HEAD_REF as environment variables.")
         sys.exit(1)
+
     user_message = os.environ.get("AUTO_PR_WRITER_USER_MESSAGE", None)
     custom_user_instruction = extract_custom_instruction(user_message) if user_message else None
-    return generate_pr_text(main_user_instruction, custom_user_instruction)
+    return generate_pr_text(github_repo=github_repo,
+                            base_branch=base_ref,
+                            pr_branch=head_ref,
+                            custom_instruction=custom_user_instruction)
 
 
 if __name__ == "__main__":
