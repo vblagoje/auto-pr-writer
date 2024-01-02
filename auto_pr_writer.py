@@ -12,7 +12,11 @@ from haystack.components.generators.chat import OpenAIChatGenerator
 from haystack.dataclasses import ChatMessage
 
 
-def generate_pr_text(github_repo: str, base_branch: str, pr_branch: str, model_name: str,
+def generate_pr_text(github_repo: str,
+                     base_branch: str,
+                     pr_branch: str,
+                     model_name: str,
+                     api_base_url: Optional[str] = None,
                      custom_instruction: Optional[str] = None) -> str:
     """
     Generates a GitHub Pull Request (PR) text based on user instructions.
@@ -25,6 +29,8 @@ def generate_pr_text(github_repo: str, base_branch: str, pr_branch: str, model_n
     :type pr_branch: str
     :param model_name: The model to use for PR text generation.
     :type model_name: str
+    :param api_base_url: Optional base URL for the OpenAI API.
+    :type api_base_url: Optional[str]
     :param custom_instruction: Optional custom instructions for PR text generation, like "Be brief, one
     sentence per section".
     :type custom_instruction: Optional[str]
@@ -91,7 +97,7 @@ def generate_pr_text(github_repo: str, base_branch: str, pr_branch: str, model_n
 
     # generate the PR text
     gen_pipe = Pipeline()
-    gen_pipe.add_component("llm", OpenAIChatGenerator(model_name=model_name))
+    gen_pipe.add_component("llm", OpenAIChatGenerator(api_base_url=api_base_url, model_name=model_name))
 
     final_result = gen_pipe.run(data={"messages": github_pr_prompt_messages})
     return final_result["llm"]["replies"][0].content
@@ -181,10 +187,16 @@ def main() -> str:
     user_message = os.environ.get("AUTO_PR_WRITER_USER_MESSAGE", None)
     custom_user_instruction = extract_custom_instruction(user_message) if user_message else None
     pr_generation_model = os.environ.get("GENERATION_MODEL") or "gpt-4-1106-preview"
+
+    # openai lib checks for is None while CI env can set it to empty string causing issues
+    base_url = os.environ.get("OPENAI_BASE_URL")
+    if not base_url:
+        base_url = None
     return generate_pr_text(github_repo=github_repo,
                             base_branch=base_ref,
                             pr_branch=head_ref,
                             model_name=pr_generation_model,
+                            api_base_url=base_url,
                             custom_instruction=custom_user_instruction)
 
 
