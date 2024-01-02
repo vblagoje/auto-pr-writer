@@ -138,10 +138,10 @@ To confirm the correct operation of the Docker image, perform a smoke test local
    Run the following command in your terminal, replacing `<YOUR_OPENAI_API_KEY>` with your actual API key:
 
    ```bash
-   docker run -e OPENAI_API_KEY=<YOUR_OPENAI_API_KEY> vblagoje/auto-pr-writer "Compare branches main and tools_update, in project deepset-ai, repo haystack"
+   docker run -e OPENAI_API_KEY=<YOUR_OPENAI_API_KEY> vblagoje/auto-pr-writer "deepset-ai/haystack main test/benchmarks2.0"
    ```
 
-   Modify the command "Compare branches main and tools_update, in project deepset-ai, repo haystack" according to the specific branches, project, and repository relevant to your test.
+   Modify the command "deepset-ai/haystack main test/benchmarks2.0" according to the specific repository main and pr branches, project relevant to your use case.
 
 3. **Check the Output**: After execution, verify the output to ensure the image functions as expected.
 
