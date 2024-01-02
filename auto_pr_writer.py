@@ -180,10 +180,11 @@ def main() -> str:
 
     user_message = os.environ.get("AUTO_PR_WRITER_USER_MESSAGE", None)
     custom_user_instruction = extract_custom_instruction(user_message) if user_message else None
+    pr_generation_model = os.environ.get("GENERATION_MODEL") or "gpt-4-1106-preview"
     return generate_pr_text(github_repo=github_repo,
                             base_branch=base_ref,
                             pr_branch=head_ref,
-                            model_name=os.environ.get("GENERATION_MODEL", "gpt-4-1106-preview"),
+                            model_name=pr_generation_model,
                             custom_instruction=custom_user_instruction)
 
 
