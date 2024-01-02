@@ -18,7 +18,7 @@ jobs:
         uses: ./
         with:
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
-          instruction: ${{ github.event.pull_request.body }}
+          user_prompt: ${{ github.event.pull_request.body }}
       - name: Debug PR Number
         if: github.event_name == 'issue_comment' && github.event.issue.pull_request
         run: echo ${{ github.event.issue.number }}
@@ -35,7 +35,7 @@ jobs:
         uses: ./
         with:
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
-          instruction: ${{ github.event.comment.body }}
+          user_prompt: ${{ github.event.comment.body }}
           target_branch: ${{ fromJson(steps.pr_details.outputs.data).base.ref }}
           source_branch: ${{ fromJson(steps.pr_details.outputs.data).head.ref }}
           pull_request_number: ${{ github.event.issue.number }}
