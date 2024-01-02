@@ -12,7 +12,7 @@ from haystack.components.generators.chat import OpenAIChatGenerator
 from haystack.dataclasses import ChatMessage
 
 
-def generate_pr_text(github_repo: str, base_branch: str, pr_branch: str,
+def generate_pr_text(github_repo: str, base_branch: str, pr_branch: str, model_name: str,
                      custom_instruction: Optional[str] = None) -> str:
     """
     Generates a GitHub Pull Request (PR) text based on user instructions.
@@ -23,6 +23,8 @@ def generate_pr_text(github_repo: str, base_branch: str, pr_branch: str,
     :type base_branch: str
     :param pr_branch: The PR branch.
     :type pr_branch: str
+    :param model_name: The model to use for PR text generation.
+    :type model_name: str
     :param custom_instruction: Optional custom instructions for PR text generation, like "Be brief, one
     sentence per section".
     :type custom_instruction: Optional[str]
@@ -89,7 +91,7 @@ def generate_pr_text(github_repo: str, base_branch: str, pr_branch: str,
 
     # generate the PR text
     gen_pipe = Pipeline()
-    gen_pipe.add_component("llm", OpenAIChatGenerator(model_name="gpt-4-1106-preview"))
+    gen_pipe.add_component("llm", OpenAIChatGenerator(model_name=model_name))
 
     final_result = gen_pipe.run(data={"messages": github_pr_prompt_messages})
     return final_result["llm"]["replies"][0].content
@@ -181,6 +183,7 @@ def main() -> str:
     return generate_pr_text(github_repo=github_repo,
                             base_branch=base_ref,
                             pr_branch=head_ref,
+                            model_name=os.environ.get("GENERATION_MODEL", "gpt-4-1106-preview"),
                             custom_instruction=custom_user_instruction)
 
 
