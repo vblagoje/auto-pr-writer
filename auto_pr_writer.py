@@ -33,27 +33,8 @@ def generate_pr_text(github_repo: str, base_branch: str, pr_branch: str, model_n
     :rtype: str
     :raises ValueError: If the OPENAI_API_KEY environment variable is not set.
     """
-
-    default_system_message = """
-    As the GitHub PR Expert, your enhanced role now includes the ability to analyze diffs provided by GitHub REST
-    service. You'll be given a JSON formatted string consisting of PR commits, description, authors etc. Your primary
-    task is crafting GitHub Pull Request text in markdown format, structured into five sections:
-
-    Why:
-    What:
-    How can it be used:
-    How did you test it:
-    Notes for the reviewer:
-
-    Always use these sections' names, don't rename them. Make sections text length proportional to the diff size.
-    If a diff is really insignificant minimal descriptions are recommended.
-
-    When provided with a diff link or output, you should review and interpret the changes to accurately describe them
-    in the PR. Your goal is to offer insightful, accurate descriptions of code changes, enhancing the understanding of
-    the PR reviewer.
-
-    Do not use ```markdown and ``` delimiters, just start your response with ### Why markdown format directly.
-    """
+    with open("system_prompt.txt", "r") as file:
+        default_system_message = file.read()
     system_message_env = os.environ.get("AUTO_PR_WRITER_SYSTEM_MESSAGE", "")
     # If the user has provided a custom system message, use it instead of the default one
     if system_message_env and system_message_env.strip():
