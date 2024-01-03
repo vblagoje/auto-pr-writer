@@ -5,7 +5,7 @@
 ![Docker Pulls](https://img.shields.io/docker/pulls/vblagoje/auto-pr-writer)
 
 ## Description
-Auto PR Writer is a GitHub Action designed to automatically generate pull request descriptions using Large Language Models (LLMs). By default, it utilizes OpenAI's models, but it also supports integration with a variety of other LLM providers such as fireworks.ai, together.xyz, anyscale, octoai, etc., allowing users to select their preferred provider to best suit their needs. This action can be customized with system and user-provided prompts to tailor the PR description generation.
+Auto PR Writer is a GitHub Action designed to automatically generate pull request descriptions using Large Language Models (LLMs). By default, it utilizes OpenAI's models, but it also supports integration with a variety of other LLM providers such as fireworks.ai, together.xyz, anyscale, octoai, etc., allowing users to select their preferred provider and LLMs to best suit their needs. This action can be customized with system and user-provided prompts to tailor the PR description generation.
 
 ![Auto PR  Demo](https://raw.githubusercontent.com/vblagoje/various/main/auto-pr-writer-optimize.gif)
 
@@ -62,7 +62,9 @@ jobs:
         uses: vblagoje/auto-pr-writer@v1
         with:
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
-          instruction: ${{ github.event.pull_request.body }}      
+          openai_base_url: https://api.fireworks.ai/inference/v1
+          generation_model: accounts/fireworks/models/yi-34b-200k-capybara
+          user_prompt: ${{ github.event.pull_request.body }}
       - name: Fetch PR details for comment event
         if: github.event_name == 'issue_comment' && github.event.issue.pull_request
         id: pr_details
@@ -76,19 +78,20 @@ jobs:
         uses: vblagoje/auto-pr-writer@v1
         with:
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
-          instruction: ${{ github.event.comment.body }}
+          openai_base_url: https://api.fireworks.ai/inference/v1
+          user_prompt: ${{ github.event.comment.body }}
           target_branch: ${{ fromJson(steps.pr_details.outputs.data).base.ref }}
           source_branch: ${{ fromJson(steps.pr_details.outputs.data).head.ref }}
           pull_request_number: ${{ github.event.issue.number }}
+          generation_model: accounts/fireworks/models/yi-34b-200k-capybara
 ```
-This workflow will run the action on pull request open, edit, and reopen events. It will also run the action on issue comment events on pull requests. 
-
+This workflow will run the action on pull request open, edit, and reopen events. It will also run the action on issue comment events on pull requests. Note that it uses fireworks.ai as an LLM provider and a very capable model named accounts/fireworks/models/yi-34b-200k-capybara LLM. This particular LLM has produced PR text descriptions on par with gpt-4.
 
 ## GitHub Action Inputs
 
 #### `openai_api_key`
 **Required**
-The OpenAI API key for authentication.
+The OpenAI API key for authentication. Note that this key could be from other LLM providers as well.
 
 #### `openai_base_url`
 **Optional**
