@@ -48,10 +48,14 @@ def generate_pr_text(github_repo: str, base_branch: str, pr_branch: str, model_n
     if llm_api_key is None:
         raise ValueError("Please set OPENAI_API_KEY environment variable to your OpenAI API key.")
 
-    openapi_spec = requests.get("https://bit.ly/3tdRUM0").json()
+    # fetch the OpenAPI specification of the GitHub compare service
+    openapi_spec = requests.get("https://bit.ly/3tJbUpZ").json()
+
+    github_token = os.environ.get("GITHUB_TOKEN")
+    service_auth = {"Github API": github_token} if github_token else None
 
     invoke_service_pipe = Pipeline()
-    invoke_service_pipe.add_component("openapi_container", OpenAPIServiceConnector())
+    invoke_service_pipe.add_component("openapi_container", OpenAPIServiceConnector(service_auth))
     invocation_payload = create_invocation_payload(base_ref=base_branch,
                                                    head_ref=pr_branch,
                                                    repository=github_repo.split("/")[0],
