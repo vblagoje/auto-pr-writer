@@ -151,11 +151,14 @@ if __name__ == "__main__":
         print("Please provide GITHUB_TOKEN as environment variable.")
         sys.exit(1)
 
+    user_message = os.environ.get("AUTO_PR_WRITER_USER_MESSAGE")
+    custom_user_instruction = extract_custom_instruction(user_message) if user_message else None
+
     # Determine whether to run based on event type and user message
     event_type = os.environ.get("EVENT_NAME", "pull_request")
-    should_run = event_type == "pull_request" or (
-        event_type == "issue_comment" and os.environ.get("AUTO_PR_WRITER_USER_MESSAGE")
-    )
+
+    # we run the auto-pr-writer for pull requests open and comments on PRs with custom instructions only
+    should_run = event_type == "pull_request" or (event_type == "issue_comment" and custom_user_instruction)
 
     if not should_run:
         print(f"Not running auto-pr-writer for event type {event_type}.")
@@ -177,8 +180,6 @@ if __name__ == "__main__":
         sys.exit(1)
 
     # Ok, we are go, retrieve user message and generate PR text
-    user_message = os.environ.get("AUTO_PR_WRITER_USER_MESSAGE", None)
-    custom_user_instruction = extract_custom_instruction(user_message) if user_message else None
     pr_generation_model = os.environ.get("GENERATION_MODEL") or "gpt-4-1106-preview"
 
     generated_pr_text = generate_pr_text(
