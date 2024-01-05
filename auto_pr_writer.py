@@ -142,51 +142,16 @@ def create_invocation_payload(base_ref, head_ref, repository, project):
     return invocation_payload
 
 
-def main() -> str:
-    """
-    Main function to generate and optionally update a GitHub PR description.
+def is_verbose():
+    return os.environ.get("VERBOSE", "true").lower() == "true"
 
-    This function orchestrates the process of generating a GitHub PR text based on either the command-line
-    arguments or environment variables. It also updates the PR description if all required environment
-    variables are set.
 
-    :return: The generated GitHub PR text.
-    :rtype: str
-
-    :raises SystemExit: If the necessary command-line arguments or environment variables are not provided.
-    """
-
-    if len(sys.argv) < 2:
-        github_repo = os.environ.get("GITHUB_REPOSITORY")
-        base_ref = os.environ.get("BASE_REF")
-        head_ref = os.environ.get("HEAD_REF")
-    else:
-        github_repo, base_ref, head_ref = sys.argv[1:4]
-
-    if not all([github_repo, base_ref, head_ref]):
-        print(
-            "Please provide GITHUB_REPOSITORY, BASE_REF, HEAD_REF as environment variables or command-line arguments."
-        )
-        sys.exit(1)
-
+if __name__ == "__main__":
     if os.environ.get("GITHUB_TOKEN") is None:
         print("Please provide GITHUB_TOKEN as environment variable.")
         sys.exit(1)
 
-    user_message = os.environ.get("AUTO_PR_WRITER_USER_MESSAGE", None)
-    custom_user_instruction = extract_custom_instruction(user_message) if user_message else None
-    pr_generation_model = os.environ.get("GENERATION_MODEL") or "gpt-4-1106-preview"
-    return generate_pr_text(
-        github_repo=github_repo,
-        base_branch=base_ref,
-        pr_branch=head_ref,
-        model_name=pr_generation_model,
-        custom_instruction=custom_user_instruction,
-    )
-
-
-if __name__ == "__main__":
-    # default event type is pull_request, so we can run smoke tests without setting any environment variables
+    # Determine whether to run based on event type and user message
     event_type = os.environ.get("EVENT_NAME", "pull_request")
     should_run = event_type == "pull_request" or (
         event_type == "issue_comment" and os.environ.get("AUTO_PR_WRITER_USER_MESSAGE")
@@ -196,9 +161,38 @@ if __name__ == "__main__":
         print(f"Not running auto-pr-writer for event type {event_type}.")
         sys.exit(0)
 
-    generated_pr_text = main()
-    print(generated_pr_text)  # add verbose flag to print this only when verbose flag is set
+    # Fetch required information from environment variables or command-line arguments
+    if len(sys.argv) < 2:
+        github_repo = os.environ.get("GITHUB_REPOSITORY")
+        base_ref = os.environ.get("BASE_REF")
+        head_ref = os.environ.get("HEAD_REF")
+    else:
+        github_repo, base_ref, head_ref = sys.argv[1:4]
 
+    # Validate required parameters
+    if not all([github_repo, base_ref, head_ref]):
+        print(
+            "Please provide GITHUB_REPOSITORY, BASE_REF, HEAD_REF as environment variables or command-line arguments."
+        )
+        sys.exit(1)
+
+    # Ok, we are go, retrieve user message and generate PR text
+    user_message = os.environ.get("AUTO_PR_WRITER_USER_MESSAGE", None)
+    custom_user_instruction = extract_custom_instruction(user_message) if user_message else None
+    pr_generation_model = os.environ.get("GENERATION_MODEL") or "gpt-4-1106-preview"
+
+    generated_pr_text = generate_pr_text(
+        github_repo=github_repo,
+        base_branch=base_ref,
+        pr_branch=head_ref,
+        model_name=pr_generation_model,
+        custom_instruction=custom_user_instruction,
+    )
+
+    if is_verbose():
+        print(generated_pr_text)
+
+    # Update the PR description if all conditions are met
     github_token = os.environ.get("GITHUB_TOKEN")
     github_repository = os.environ.get("GITHUB_REPOSITORY")
     pr_number = os.environ.get("PR_NUMBER")
@@ -214,4 +208,4 @@ if __name__ == "__main__":
             sys.exit(status_code)
     else:
         print("Not updating PR description.")
-        print("Please set GITHUB_TOKEN, GITHUB_REPOSITORY, PR_NUMBER environment variables to update PR description.")
+        print("Ensure GITHUB_TOKEN, GITHUB_REPOSITORY, PR_NUMBER are set to update the PR description.")
