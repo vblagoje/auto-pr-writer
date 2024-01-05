@@ -11,8 +11,9 @@ from haystack.components.generators.chat import OpenAIChatGenerator
 from haystack.dataclasses import ChatMessage
 
 
-def generate_pr_text(github_repo: str, base_branch: str, pr_branch: str, model_name: str,
-                     custom_instruction: Optional[str] = None) -> str:
+def generate_pr_text(
+    github_repo: str, base_branch: str, pr_branch: str, model_name: str, custom_instruction: Optional[str] = None
+) -> str:
     """
     Generates a GitHub Pull Request (PR) text based on user instructions.
 
@@ -55,20 +56,22 @@ def generate_pr_text(github_repo: str, base_branch: str, pr_branch: str, model_n
 
     invoke_service_pipe = Pipeline()
     invoke_service_pipe.add_component("openapi_container", OpenAPIServiceConnector(service_auth))
-    invocation_payload = create_invocation_payload(base_ref=base_branch,
-                                                   head_ref=pr_branch,
-                                                   repository=github_repo.split("/")[0],
-                                                   project=github_repo.split("/")[1])
+    invocation_payload = create_invocation_payload(
+        base_ref=base_branch,
+        head_ref=pr_branch,
+        repository=github_repo.split("/")[0],
+        project=github_repo.split("/")[1],
+    )
 
     invocation_payload = json.dumps([invocation_payload])
     service_response = invoke_service_pipe.run(
-        data={"messages": [ChatMessage.from_assistant(invocation_payload)],
-              "service_openapi_spec": openapi_spec})
+        data={"messages": [ChatMessage.from_assistant(invocation_payload)], "service_openapi_spec": openapi_spec}
+    )
 
     github_service_response = service_response["openapi_container"]["service_response"]
     if custom_instruction:
         github_pr_prompt_messages = (
-                [system_message] + github_service_response + [ChatMessage.from_user(custom_instruction)]
+            [system_message] + github_service_response + [ChatMessage.from_user(custom_instruction)]
         )
     else:
         github_pr_prompt_messages = [system_message] + github_service_response
@@ -77,8 +80,7 @@ def generate_pr_text(github_repo: str, base_branch: str, pr_branch: str, model_n
     gen_pipe = Pipeline()
 
     # empirically, max_tokens=2560 should be enough to generate a PR text
-    gen_pipe.add_component("llm", OpenAIChatGenerator(model_name=model_name,
-                                                      generation_kwargs={"max_tokens": 2560}))
+    gen_pipe.add_component("llm", OpenAIChatGenerator(model_name=model_name, generation_kwargs={"max_tokens": 2560}))
 
     final_result = gen_pipe.run(data={"messages": github_pr_prompt_messages})
     return final_result["llm"]["replies"][0].content
@@ -132,28 +134,34 @@ def create_invocation_payload(base_ref, head_ref, repository, project):
         "id": "some_irrelevant_id",
         "function": {
             "arguments": f'{{"parameters": {{"basehead": "{base_ref}...{head_ref}", '
-                         f'"owner": "{repository}", "repo": "{project}"}}}}',
-            "name": "compare_branches"
+            f'"owner": "{repository}", "repo": "{project}"}}}}',
+            "name": "compare_branches",
         },
-        "type": "function"
+        "type": "function",
     }
     return invocation_payload
 
 
-def main() -> str:
-    """
-    Main function to generate and optionally update a GitHub PR description.
+def is_verbose():
+    return os.environ.get("VERBOSE", "true").lower() == "true"
 
-    This function orchestrates the process of generating a GitHub PR text based on either the command-line
-    arguments or environment variables. It also updates the PR description if all required environment
-    variables are set.
 
-    :return: The generated GitHub PR text.
-    :rtype: str
+if __name__ == "__main__":
+    if os.environ.get("GITHUB_TOKEN") is None:
+        print("Please provide GITHUB_TOKEN as environment variable.")
+        sys.exit(1)
 
-    :raises SystemExit: If the necessary command-line arguments or environment variables are not provided.
-    """
+    # Determine whether to run based on event type and user message
+    event_type = os.environ.get("EVENT_NAME", "pull_request")
+    should_run = event_type == "pull_request" or (
+        event_type == "issue_comment" and os.environ.get("AUTO_PR_WRITER_USER_MESSAGE")
+    )
 
+    if not should_run:
+        print(f"Not running auto-pr-writer for event type {event_type}.")
+        sys.exit(0)
+
+    # Fetch required information from environment variables or command-line arguments
     if len(sys.argv) < 2:
         github_repo = os.environ.get("GITHUB_REPOSITORY")
         base_ref = os.environ.get("BASE_REF")
@@ -161,38 +169,30 @@ def main() -> str:
     else:
         github_repo, base_ref, head_ref = sys.argv[1:4]
 
+    # Validate required parameters
     if not all([github_repo, base_ref, head_ref]):
         print(
-            "Please provide GITHUB_REPOSITORY, BASE_REF, HEAD_REF as environment variables or command-line arguments.")
+            "Please provide GITHUB_REPOSITORY, BASE_REF, HEAD_REF as environment variables or command-line arguments."
+        )
         sys.exit(1)
 
-    if os.environ.get("GITHUB_TOKEN") is None:
-        print("Please provide GITHUB_TOKEN as environment variable.")
-        sys.exit(1)
-
+    # Ok, we are go, retrieve user message and generate PR text
     user_message = os.environ.get("AUTO_PR_WRITER_USER_MESSAGE", None)
     custom_user_instruction = extract_custom_instruction(user_message) if user_message else None
     pr_generation_model = os.environ.get("GENERATION_MODEL") or "gpt-4-1106-preview"
-    return generate_pr_text(github_repo=github_repo,
-                            base_branch=base_ref,
-                            pr_branch=head_ref,
-                            model_name=pr_generation_model,
-                            custom_instruction=custom_user_instruction)
 
+    generated_pr_text = generate_pr_text(
+        github_repo=github_repo,
+        base_branch=base_ref,
+        pr_branch=head_ref,
+        model_name=pr_generation_model,
+        custom_instruction=custom_user_instruction,
+    )
 
-if __name__ == "__main__":
-    # default event type is pull_request, so we can run smoke tests without setting any environment variables
-    event_type = os.environ.get("EVENT_NAME", "pull_request")
-    should_run = (event_type == "pull_request" or
-                  (event_type == "issue_comment" and os.environ.get("AUTO_PR_WRITER_USER_MESSAGE")))
+    if is_verbose():
+        print(generated_pr_text)
 
-    if not should_run:
-        print(f"Not running auto-pr-writer for event type {event_type}.")
-        sys.exit(0)
-
-    generated_pr_text = main()
-    print(generated_pr_text)  # add verbose flag to print this only when verbose flag is set
-
+    # Update the PR description if all conditions are met
     github_token = os.environ.get("GITHUB_TOKEN")
     github_repository = os.environ.get("GITHUB_REPOSITORY")
     pr_number = os.environ.get("PR_NUMBER")
@@ -208,4 +208,4 @@ if __name__ == "__main__":
             sys.exit(status_code)
     else:
         print("Not updating PR description.")
-        print("Please set GITHUB_TOKEN, GITHUB_REPOSITORY, PR_NUMBER environment variables to update PR description.")
+        print("Ensure GITHUB_TOKEN, GITHUB_REPOSITORY, PR_NUMBER are set to update the PR description.")
