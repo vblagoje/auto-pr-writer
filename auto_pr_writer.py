@@ -181,6 +181,15 @@ def main() -> str:
 
 
 if __name__ == "__main__":
+    # default event type is pull_request, so we can run smoke tests without setting any environment variables
+    event_type = os.environ.get("EVENT_NAME", "pull_request")
+    should_run = (event_type == "pull_request" or
+                  (event_type == "issue_comment" and os.environ.get("AUTO_PR_WRITER_USER_MESSAGE")))
+
+    if not should_run:
+        print(f"Not running auto-pr-writer for event type {event_type}.")
+        sys.exit(0)
+
     generated_pr_text = main()
     print(generated_pr_text)  # add verbose flag to print this only when verbose flag is set
 
