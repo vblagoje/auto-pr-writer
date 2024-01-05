@@ -129,6 +129,9 @@ System message/prompt to help the model generate the PR description.
 **Optional**
 Additional user prompt to help the model generate the PR description.
 
+#### `event_name`
+**Optional**
+The name of the GitHub event that triggered the workflow. Useful for the script to determine whether the action is run on a pull request or an issue comment event. Defaults to github.event_name variable.
 
 ## Contributing
 
