@@ -146,6 +146,10 @@ def is_verbose():
     return os.environ.get("VERBOSE", "true").lower() == "true"
 
 
+def contains_skip_instruction(text):
+    return bool(re.search(r"\bskip\b", text, re.IGNORECASE))
+
+
 if __name__ == "__main__":
     if os.environ.get("GITHUB_TOKEN") is None:
         print("Please provide GITHUB_TOKEN as environment variable.")
@@ -154,6 +158,10 @@ if __name__ == "__main__":
     user_message = os.environ.get("AUTO_PR_WRITER_USER_MESSAGE")
     custom_user_instruction = extract_custom_instruction(user_message) if user_message else None
 
+    if contains_skip_instruction(custom_user_instruction):
+        print("Exiting auto-pr-writer, user instruction contains the word 'skip'.")
+        sys.exit(0)
+
     # Determine whether to run based on event type and user message
     event_type = os.environ.get("EVENT_NAME", "pull_request")
 
@@ -161,7 +169,11 @@ if __name__ == "__main__":
     should_run = event_type == "pull_request" or (event_type == "issue_comment" and custom_user_instruction)
 
     if not should_run:
-        print(f"Not running auto-pr-writer for event type {event_type}.")
+        print(
+            f"Exiting auto-pr-writer, event type is {event_type}."
+            "auto-pr-writer runs for pull requests open/reopen and comments on PRs with custom "
+            "@auto-pr-writer-bot instructions only"
+        )
         sys.exit(0)
 
     # Fetch required information from environment variables or command-line arguments
