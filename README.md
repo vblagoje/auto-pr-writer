@@ -89,6 +89,10 @@ This workflow will run the action on pull request open, edit, and reopen events.
 
 ## GitHub Action Inputs
 
+#### `github_token`
+**Required**
+GITHUB_TOKEN or a repository-scoped Personal Access Token (PAT), defaulting to the GitHub token provided by the GitHub Actions runner. It is essential for invoking the GitHub API REST service to retrieve Pull Request details. Using GITHUB_TOKEN permits actions to access both public and private repositories, helping to bypass rate limits imposed by the GitHub API.
+
 #### `openai_api_key`
 **Required**
 The OpenAI API key for authentication. Note that this key could be from other LLM providers as well.
@@ -96,10 +100,6 @@ The OpenAI API key for authentication. Note that this key could be from other LL
 #### `openai_base_url`
 **Optional**
 The base URL for the OpenAI API. Using this input one can use different LLM providers (e.g. fireworks.ai, together.xyz, anyscale, octoai etc.) Defaults to https://api.openai.com/v1
-
-#### `github_token`
-**Optional**
-GITHUB_TOKEN or a repo scoped Personal Access Token (PAT). Defaults to the GitHub token provided by the GitHub Actions runner.
 
 #### `pull_request_number`
 **Optional**
@@ -131,7 +131,7 @@ Additional user prompt to help the model generate the PR description.
 
 #### `event_name`
 **Optional**
-The name of the GitHub event that triggered the workflow. Useful for the script to determine whether the action is run on a pull request or an issue comment event. Defaults to github.event_name variable.
+The name of the GitHub event that triggered the workflow. Useful for the underlying Python script to determine whether the action is run on a pull request or an issue comment event. Defaults to github.event_name variable.
 
 ## Contributing
 
@@ -149,10 +149,10 @@ To confirm the correct operation of the Docker image, perform a smoke test local
 1. **Prepare Your OpenAI API Key**: Ensure your OpenAI API key is ready for use.
 
 2. **Execute the Image**:
-   Run the following command in your terminal, replacing `<YOUR_OPENAI_API_KEY>` with your actual API key:
+   Run the following command in your terminal, replacing `<YOUR_OPENAI_API_KEY>` with your actual API key and `<YOUR_GITHUB_TOKEN>` with your actual GitHub token:
 
    ```bash
-   docker run -e OPENAI_API_KEY=<YOUR_OPENAI_API_KEY> vblagoje/auto-pr-writer deepset-ai/haystack main test/benchmarks2.0
+   docker run -e OPENAI_API_KEY=<YOUR_OPENAI_API_KEY> -e GITHUB_TOKEN=<YOUR_GITHUB_TOKEN> vblagoje/auto-pr-writer deepset-ai/haystack main test/benchmarks2.0
    ```
 
    Modify the parameters `deepset-ai/haystack main test/benchmarks2.0` according to the specific repository main and pr branches, relevant to your use case.
