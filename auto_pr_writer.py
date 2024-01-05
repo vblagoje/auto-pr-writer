@@ -151,18 +151,19 @@ def contains_skip_instruction(text):
 
 
 if __name__ == "__main__":
-    if os.environ.get("GITHUB_TOKEN") is None:
+    if not os.environ.get("GITHUB_TOKEN"):
         print("Please provide GITHUB_TOKEN as environment variable.")
         sys.exit(1)
 
     user_message = os.environ.get("AUTO_PR_WRITER_USER_MESSAGE")
     custom_user_instruction = extract_custom_instruction(user_message) if user_message else None
 
-    if contains_skip_instruction(custom_user_instruction):
+    if custom_user_instruction and contains_skip_instruction(custom_user_instruction):
         print("Exiting auto-pr-writer, user instruction contains the word 'skip'.")
         sys.exit(0)
 
-    # Determine whether to run based on event type and user message
+    # Leave "pull_request" as default event type so that we can run the auto-pr-writer locally or via Docker
+    # without having to set the event type explicitly
     event_type = os.environ.get("EVENT_NAME", "pull_request")
 
     # we run the auto-pr-writer for pull requests open and comments on PRs with custom instructions only
@@ -191,14 +192,12 @@ if __name__ == "__main__":
         )
         sys.exit(1)
 
-    # Ok, we are go, retrieve user message and generate PR text
-    pr_generation_model = os.environ.get("GENERATION_MODEL") or "gpt-4-1106-preview"
-
+    # Ok, we are go, generate PR text
     generated_pr_text = generate_pr_text(
         github_repo=github_repo,
         base_branch=base_ref,
         pr_branch=head_ref,
-        model_name=pr_generation_model,
+        model_name=os.environ.get("GENERATION_MODEL") or "gpt-4-1106-preview",
         custom_instruction=custom_user_instruction,
     )
 
