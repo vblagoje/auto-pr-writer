@@ -11,6 +11,10 @@ from haystack.components.generators.chat import OpenAIChatGenerator
 from haystack.dataclasses import ChatMessage
 
 
+def read_system_message() -> str:
+    return os.environ.get("AUTO_PR_WRITER_SYSTEM_MESSAGE") or open("system_prompt.txt").read()
+
+
 def generate_pr_text(
     github_repo: str, base_branch: str, pr_branch: str, model_name: str, custom_instruction: Optional[str] = None
 ) -> str:
@@ -33,21 +37,6 @@ def generate_pr_text(
     :rtype: str
     :raises ValueError: If the OPENAI_API_KEY environment variable is not set.
     """
-    with open("system_prompt.txt", "r") as file:
-        default_system_message = file.read()
-    system_message_env = os.environ.get("AUTO_PR_WRITER_SYSTEM_MESSAGE", "")
-    # If the user has provided a custom system message, use it instead of the default one
-    if system_message_env and system_message_env.strip():
-        system_message = system_message_env
-    else:
-        system_message = default_system_message
-
-    system_message = ChatMessage.from_system(system_message)
-
-    llm_api_key = os.environ.get("OPENAI_API_KEY", None)
-    if llm_api_key is None:
-        raise ValueError("Please set OPENAI_API_KEY environment variable to your OpenAI API key.")
-
     # fetch the OpenAPI specification of the GitHub compare service
     openapi_spec = requests.get("https://bit.ly/3tJbUpZ").json()
 
@@ -69,6 +58,7 @@ def generate_pr_text(
     )
 
     github_service_response = service_response["openapi_container"]["service_response"]
+    system_message = ChatMessage.from_system(read_system_message())
     if custom_instruction:
         github_pr_prompt_messages = (
             [system_message] + github_service_response + [ChatMessage.from_user(custom_instruction)]
@@ -129,7 +119,15 @@ def extract_custom_instruction(user_instruction: str) -> str:
     return match.group(1) if match else ""
 
 
-def create_invocation_payload(base_ref, head_ref, repository, project):
+def create_invocation_payload(base_ref: str, head_ref: str, repository: str, project: str):
+    """
+    Creates an invocation payload for the GitHub compare service.
+    :param base_ref: A string containing the base branch of the PR e.g. 'main'.
+    :param head_ref: A string containing the PR branch.
+    :param repository: A string containing the GitHub repository owner e.g. 'deepset-ai'.
+    :param project: A string containing the GitHub repository name e.g. 'haystack'.
+    :return: A dictionary containing the invocation payload.
+    """
     invocation_payload = {
         "id": "some_irrelevant_id",
         "function": {
@@ -151,9 +149,15 @@ def contains_skip_instruction(text):
 
 
 if __name__ == "__main__":
-    if not os.environ.get("GITHUB_TOKEN"):
-        print("Please provide GITHUB_TOKEN as environment variable.")
-        sys.exit(1)
+    required_env_vars = {
+        "GITHUB_TOKEN": "Please provide GITHUB_TOKEN as environment variable.",
+        "OPENAI_API_KEY": "Please set OPENAI_API_KEY environment variable to your OpenAI API key.",
+    }
+
+    for var, msg in required_env_vars.items():
+        if not os.environ.get(var):
+            print(msg)
+            sys.exit(1)
 
     user_message = os.environ.get("AUTO_PR_WRITER_USER_MESSAGE")
     custom_user_instruction = extract_custom_instruction(user_message) if user_message else None
@@ -179,14 +183,14 @@ if __name__ == "__main__":
 
     # Fetch required information from environment variables or command-line arguments
     if len(sys.argv) < 2:
-        github_repo = os.environ.get("GITHUB_REPOSITORY")
-        base_ref = os.environ.get("BASE_REF")
-        head_ref = os.environ.get("HEAD_REF")
+        github_repository, base_ref, head_ref = (
+            os.environ.get(var) for var in ["GITHUB_REPOSITORY", "BASE_REF", "HEAD_REF"]
+        )
     else:
-        github_repo, base_ref, head_ref = sys.argv[1:4]
+        github_repository, base_ref, head_ref = sys.argv[1:4]
 
     # Validate required parameters
-    if not all([github_repo, base_ref, head_ref]):
+    if not all([github_repository, base_ref, head_ref]):
         print(
             "Please provide GITHUB_REPOSITORY, BASE_REF, HEAD_REF as environment variables or command-line arguments."
         )
@@ -194,10 +198,10 @@ if __name__ == "__main__":
 
     # Ok, we are go, generate PR text
     generated_pr_text = generate_pr_text(
-        github_repo=github_repo,
+        github_repo=github_repository,
         base_branch=base_ref,
         pr_branch=head_ref,
-        model_name=os.environ.get("GENERATION_MODEL") or "gpt-4-1106-preview",
+        model_name=os.environ.get("GENERATION_MODEL") or "gpt-4-1106-preview",  # long context, change with caution
         custom_instruction=custom_user_instruction,
     )
 
@@ -205,9 +209,7 @@ if __name__ == "__main__":
         print(generated_pr_text)
 
     # Update the PR description if all conditions are met
-    github_token = os.environ.get("GITHUB_TOKEN")
-    github_repository = os.environ.get("GITHUB_REPOSITORY")
-    pr_number = os.environ.get("PR_NUMBER")
+    github_token, pr_number = (os.environ.get(var) for var in ["GITHUB_TOKEN", "PR_NUMBER"])
 
     if all([github_token, github_repository, pr_number, generated_pr_text]):
         status_code, response = update_pr_description(github_repository, pr_number, generated_pr_text, github_token)
