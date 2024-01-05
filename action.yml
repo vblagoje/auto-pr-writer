@@ -36,6 +36,9 @@ inputs:
   user_prompt:
     description: Additional prompt to help the model generate the PR description
     required: false
+  event_name:
+    description: The name of the GitHub event that triggered the workflow
+    default: ${{ github.event_name }}
 runs:
   using: 'docker'
   image: 'docker://vblagoje/auto-pr-writer:latest'
@@ -50,3 +53,4 @@ runs:
     GENERATION_MODEL: ${{ inputs.generation_model }}
     AUTO_PR_WRITER_SYSTEM_MESSAGE: ${{ inputs.system_prompt }}
     AUTO_PR_WRITER_USER_MESSAGE: ${{ inputs.user_prompt }}
+    EVENT_NAME: ${{ inputs.event_name }}
