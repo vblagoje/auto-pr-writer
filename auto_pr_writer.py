@@ -5,7 +5,6 @@ import sys
 from typing import Optional, Tuple, Dict, Any
 
 import requests
-
 from haystack import Pipeline
 from haystack.components.connectors import OpenAPIServiceConnector
 from haystack.components.generators.chat import OpenAIChatGenerator
@@ -51,8 +50,8 @@ def generate_pr_text(github_repo: str, base_branch: str, pr_branch: str, model_n
     # fetch the OpenAPI specification of the GitHub compare service
     openapi_spec = requests.get("https://bit.ly/3tJbUpZ").json()
 
-    github_token = os.environ.get("GITHUB_TOKEN")
-    service_auth = {"Github API": github_token} if github_token else None
+    # a GitHub access token is required to invoke the GitHub compare service and avoid rate limiting
+    service_auth = {"Github API": os.environ.get("GITHUB_TOKEN")}
 
     invoke_service_pipe = Pipeline()
     invoke_service_pipe.add_component("openapi_container", OpenAPIServiceConnector(service_auth))
@@ -79,7 +78,7 @@ def generate_pr_text(github_repo: str, base_branch: str, pr_branch: str, model_n
 
     # empirically, max_tokens=2560 should be enough to generate a PR text
     gen_pipe.add_component("llm", OpenAIChatGenerator(model_name=model_name,
-                                                            generation_kwargs={"max_tokens": 2560}))
+                                                      generation_kwargs={"max_tokens": 2560}))
 
     final_result = gen_pipe.run(data={"messages": github_pr_prompt_messages})
     return final_result["llm"]["replies"][0].content
@@ -163,7 +162,12 @@ def main() -> str:
         github_repo, base_ref, head_ref = sys.argv[1:4]
 
     if not all([github_repo, base_ref, head_ref]):
-        print("Please provide GITHUB_REPOSITORY, BASE_REF, HEAD_REF as environment variables.")
+        print(
+            "Please provide GITHUB_REPOSITORY, BASE_REF, HEAD_REF as environment variables or command-line arguments.")
+        sys.exit(1)
+
+    if os.environ.get("GITHUB_TOKEN") is None:
+        print("Please provide GITHUB_TOKEN as environment variable.")
         sys.exit(1)
 
     user_message = os.environ.get("AUTO_PR_WRITER_USER_MESSAGE", None)
