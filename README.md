@@ -133,6 +133,10 @@ Additional user prompt to help the model generate the PR description.
 **Optional**
 The name of the GitHub event that triggered the workflow. Useful for the underlying Python script to determine whether the action is run on a pull request or an issue comment event. Defaults to github.event_name variable.
 
+#### `bot_name`
+**Optional**
+The name of the bot so users can guide LLM generation with @bot_name from PR comments. Defaults to auto-pr-writer-bot
+
 ## Contributing
 
 If you have suggestions for improving Auto PR Writer or want to report a bug, please feel welcome to open an issue or a pull request. Here are some guidelines to help you contribute effectively:

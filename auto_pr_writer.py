@@ -10,6 +10,9 @@ from haystack.components.connectors import OpenAPIServiceConnector
 from haystack.components.generators.chat import OpenAIChatGenerator
 from haystack.dataclasses import ChatMessage
 
+# Configuration: Assign the bot name from environment variables with a default value
+AUTO_PR_WRITER_BOT_NAME = os.environ.get("AUTO_PR_WRITER_BOT_NAME", "auto-pr-writer-bot")
+
 
 def read_system_message() -> str:
     return os.environ.get("AUTO_PR_WRITER_SYSTEM_MESSAGE") or open("system_prompt.txt").read()
@@ -66,13 +69,15 @@ def generate_pr_text(
     else:
         github_pr_prompt_messages = [system_message] + github_service_response
 
-    # generate the PR text
-    gen_pipe = Pipeline()
+    gen_pr_text_pipeline = Pipeline()
+    # empirically, max_tokens 2560 is enough to generate a PR text
+    # use organization to track costs
+    llm = OpenAIChatGenerator(
+        model_name=model_name, organization=AUTO_PR_WRITER_BOT_NAME, generation_kwargs={"max_tokens": 2560}
+    )
+    gen_pr_text_pipeline.add_component("llm", llm)
 
-    # empirically, max_tokens=2560 should be enough to generate a PR text
-    gen_pipe.add_component("llm", OpenAIChatGenerator(model_name=model_name, generation_kwargs={"max_tokens": 2560}))
-
-    final_result = gen_pipe.run(data={"messages": github_pr_prompt_messages})
+    final_result = gen_pr_text_pipeline.run(data={"messages": github_pr_prompt_messages})
     return final_result["llm"]["replies"][0].content
 
 
@@ -106,7 +111,7 @@ def extract_custom_instruction(user_instruction: str) -> str:
     Extracts custom instruction from a user instruction string by searching for specific pattern in the user
     instruction string to find and return custom instructions.
 
-    The function uses regular expressions to find the custom instruction following the '@auto-pr-writer-bot' mention
+    The function uses regular expressions to find the custom instruction following the '@AUTO_PR_WRITER_BOT_NAME' mention
     in the user instruction.
 
     :param user_instruction: The complete user instruction string, potentially containing custom instructions.
@@ -114,8 +119,8 @@ def extract_custom_instruction(user_instruction: str) -> str:
     :return: The extracted custom instruction, if found; otherwise, an empty string.
     :rtype: str
     """
-    # Search for the message following @auto-pr-writer-bot
-    match = re.search(r"@auto-pr-writer-bot\s+(.*)", user_instruction)
+    # Search for the message following @AUTO_PR_WRITER_BOT_NAME
+    match = re.search(rf"@{re.escape(AUTO_PR_WRITER_BOT_NAME)}\s+(.*)", user_instruction)
     return match.group(1) if match else ""
 
 
@@ -177,7 +182,7 @@ if __name__ == "__main__":
         print(
             f"Exiting auto-pr-writer, event type is {event_type}."
             "auto-pr-writer runs for pull requests open/reopen and comments on PRs with custom "
-            "@auto-pr-writer-bot instructions only"
+            f"@{AUTO_PR_WRITER_BOT_NAME} instructions only"
         )
         sys.exit(0)
 
