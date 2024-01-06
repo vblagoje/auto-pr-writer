@@ -166,5 +166,76 @@ To confirm the correct operation of the Docker image, perform a smoke test local
 This test will help you verify the basic functionality of the Docker image. Remember to adjust the command with the appropriate 
 project, repository, and branches you wish to compare, and ensure the security of your OpenAI API key throughout this process.
 
+
+## Frequently Asked Questions (FAQ)
+
+### 1) Which LLM should I choose for PR text generation?
+
+When selecting an LLM for PR text generation, it is crucial to consider the model's ability to handle long contexts, as
+it needs to process all the PR diffs. We have tested (January 2024) models like yi-34b-200k-capybara and gpt-4-1106-preview.
+While yi-34b-200k-capybara is a very capable model that produces excellent results in about 80-90% of PRs, sometimes
+the output format is not respected, leading to less pristine PRs. On the other hand, gpt-4-1106-preview has shown
+consistent excellence in generating PR descriptions. Therefore, we recommend gpt-4-1106-preview for consistent quality
+but encourage experimentation to find the best fit for your specific needs.
+
+### 2) How do I use custom prompts to guide LLM in generating PR text?
+
+Custom prompts are a powerful way to guide the LLM in generating PR text according to your specific needs. To use them
+directly on the GitHub website, mention `@auto-pr-writer-bot` followed by your instructions in the PR description or
+comments. These instructions act as additional context or directives for the LLM, helping it understand how you want
+the PR text to be structured or focused. For instance, if you want the PR description to be concise, you might
+comment: `@auto-pr-writer-bot, please be brief and limit each section to one sentence`. Remember to replace
+`@auto-pr-writer-bot` with the customized bot name if you've set one. This way, you can effectively communicate your
+requirements to the LLM, resulting in more tailored and useful PR descriptions.
+
+### 3) Can we customize the name of the bot?
+
+Yes, you can customize the bot name. In your `action.yml` specify the `bot_name` input. The `bot_name` is typically
+set to a recognizable contributor on your project, so users can get name completion when they start typing `@` in
+comments. Customizing the bot name allows you to tailor the interaction to your project's or organization's branding
+and user expectations.
+
+### 4) Can we skip PR text generation altogether when opening a PR?
+
+Absolutely, to skip PR text generation, simply include the word "skip" in a comment tagged to your bot. For example,
+you can comment `@auto-pr-writer-bot skip` in the main PR description text area. This feature allows you to bypass the
+automatic generation when you already have a specific description in mind or when it's not needed.
+
+### 5) Can I experiment with other LLMs and LLM platforms?
+
+Yes, the Auto PR Writer is designed to be flexible with various LLM providers such as fireworks.ai, together.xyz,
+anyscale, octoai, etc. You can specify different LLMs and providers by setting the `openai_base_url` and
+`generation_model` inputs in your workflow. This allows you to experiment with different language models and
+platforms to find the one that best fits your needs and preferences for PR text generation.
+
+### 6) How should I test a new LLM and system prompt effectively?
+
+To effectively test a new LLM and system prompt, refer to the `Smoke Test for Docker Image` section of this document.
+If necessary, start by adjusting the `system_prompt.txt` file to reflect your desired system prompt changes. If you have
+changed any of the project files such as `system_prompt.txt` or `auto_pr_writer.py` rebuild the docker image to
+incorporate these changes (e.g. `docker buildx build -t vblagoje/auto-pr-writer .`). Then, initiate a series of
+approximately a dozen PR generations, specifying your repository, base branch, and head branch as parameters for the
+Docker run command.
+
+Ensure the following environment variables are set correctly in your Docker run command:
+
+- `OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>`: This should be your OpenAI or other LLM provider's API key.
+- `GITHUB_TOKEN=<YOUR_GITHUB_TOKEN>`: Your GitHub token for accessing repository data and making changes.
+
+Additionally, if you're using a specific LLM provider or model, set the corresponding environment variables
+for `OPENAI_BASE_URL` and `GENERATION_MODEL` as needed. These variables will allow you to direct the script to use
+the correct API endpoints and models for PR text generation. Refer back to the `Smoke Test for Docker Image` section
+for the detailed procedure and adapt the instructions to fit your specific setup and testing needs.
+
+### 7) I'm concerned about the PR text generation costs, how can I minimize them?
+
+Managing costs is a critical aspect of using LLMs for PR text generation. As of January 2024, the cost per PR using the
+large context gpt-4 model is approximately 10 cents, whereas using the capybara model on fireworks.ai is about 2-3
+cents. It's worth noting that these costs are continually evolving and generally expected to decrease over time. To
+precisely monitor and manage your expenditure, especially if you are using platforms like OpenAI, you can set
+the `OPENAI_ORG_ID` environment variable to track costs accurately. This will help you keep a close eye on your usage
+and optimize accordingly to minimize expenses. Keep in mind that selecting the right model for your needs and
+monitoring the market for the best rates are effective strategies to control costs.
+
 ## License
 This project is licensed under [Apache 2.0 License](LICENSE).
