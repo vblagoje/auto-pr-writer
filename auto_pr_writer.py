@@ -18,6 +18,10 @@ def read_system_message() -> str:
     return os.environ.get("AUTO_PR_WRITER_SYSTEM_MESSAGE") or open("system_prompt.txt").read()
 
 
+def load_github_compare_service_spec() -> Dict[str, Any]:
+    return json.loads(open("github_compare_spec.json").read())
+
+
 def generate_pr_text(
     github_repo: str, base_branch: str, pr_branch: str, model_name: str, custom_instruction: Optional[str] = None
 ) -> str:
@@ -40,8 +44,8 @@ def generate_pr_text(
     :rtype: str
     :raises ValueError: If the OPENAI_API_KEY environment variable is not set.
     """
-    # fetch the OpenAPI specification of the GitHub compare service
-    openapi_spec = requests.get("https://bit.ly/3tJbUpZ").json()
+    # read the OpenAPI specification of the GitHub compare service
+    openapi_spec = load_github_compare_service_spec()
 
     # a GitHub access token is required to invoke the GitHub compare service and avoid rate limiting
     service_auth = {"Github API": os.environ.get("GITHUB_TOKEN")}
