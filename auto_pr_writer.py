@@ -75,10 +75,8 @@ def generate_pr_text(
 
     gen_pr_text_pipeline = Pipeline()
     # empirically, max_tokens 2560 is enough to generate a PR text
-    # use organization to track costs
-    llm = OpenAIChatGenerator(
-        model_name=model_name, organization=AUTO_PR_WRITER_BOT_NAME, generation_kwargs={"max_tokens": 2560}
-    )
+    # Note that you can use OPENAI_ORG_ID to set the organization ID for your OpenAI API key to track usage and costs
+    llm = OpenAIChatGenerator(model_name=model_name, generation_kwargs={"max_tokens": 2560})
     gen_pr_text_pipeline.add_component("llm", llm)
 
     final_result = gen_pr_text_pipeline.run(data={"messages": github_pr_prompt_messages})
