@@ -212,6 +212,10 @@ if __name__ == "__main__":
         custom_instruction=custom_user_instruction,
     )
 
+    attribution_message = os.environ.get("AUTO_PR_WRITER_ATTRIBUTION_MESSAGE")
+    if attribution_message:
+        generated_pr_text = f"{generated_pr_text}\n\n{attribution_message}"
+
     if is_verbose():
         print(generated_pr_text)
 
