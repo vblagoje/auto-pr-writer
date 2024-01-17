@@ -1,4 +1,4 @@
-FROM deepset/haystack:base-main
+FROM deepset/haystack:base-v2.0.0-beta.5
 
 # Set the working directory in the container to /app
 WORKDIR /app
