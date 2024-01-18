@@ -24,7 +24,7 @@ def load_github_compare_service_spec() -> Dict[str, Any]:
 
 def generate_pr_text(
     github_repo: str, base_branch: str, pr_branch: str, model_name: str, custom_instruction: Optional[str] = None
-) -> str:
+) -> ChatMessage:
     """
     Generates a GitHub Pull Request (PR) text based on user instructions.
 
@@ -39,9 +39,8 @@ def generate_pr_text(
     :param custom_instruction: Optional custom instructions for PR text generation, like "Be brief, one
     sentence per section".
     :type custom_instruction: Optional[str]
-    :return: A string containing the generated GitHub PR text in Markdown format, structured into sections like Why,
-    What, How to use, etc.
-    :rtype: str
+    :return: A ChatMessage containing the generated PR text along with the generation statistics in the metadata.
+    :rtype: ChatMessage
     :raises ValueError: If the OPENAI_API_KEY environment variable is not set.
     """
     # read the OpenAPI specification of the GitHub compare service
@@ -84,7 +83,7 @@ def generate_pr_text(
     gen_pr_text_pipeline.add_component("llm", llm)
 
     final_result = gen_pr_text_pipeline.run(data={"messages": github_pr_prompt_messages})
-    return final_result["llm"]["replies"][0].content
+    return final_result["llm"]["replies"][0]
 
 
 def update_pr_description(repo: str, pr_number_id: str, description: str, token: str) -> Tuple[int, Dict[str, Any]]:
@@ -208,13 +207,14 @@ if __name__ == "__main__":
         sys.exit(1)
 
     # Ok, we are go, generate PR text
-    generated_pr_text = generate_pr_text(
+    generated_pr_text_message = generate_pr_text(
         github_repo=github_repository,
         base_branch=base_ref,
         pr_branch=head_ref,
         model_name=os.environ.get("GENERATION_MODEL") or "gpt-4-1106-preview",  # long context, change with caution
         custom_instruction=custom_user_instruction,
     )
+    generated_pr_text = generated_pr_text_message.content
 
     attribution_message = os.environ.get("AUTO_PR_WRITER_ATTRIBUTION_MESSAGE")
     if attribution_message:
@@ -222,6 +222,8 @@ if __name__ == "__main__":
 
     if is_verbose():
         print(generated_pr_text)
+        if generated_pr_text_message.meta:
+            print(f"\n\nLLM PR text generation statistics: {generated_pr_text_message.meta}")
 
     # Update the PR description if all conditions are met
     github_token, pr_number = (os.environ.get(var) for var in ["GITHUB_TOKEN", "PR_NUMBER"])
