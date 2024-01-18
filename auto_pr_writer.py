@@ -2,7 +2,7 @@ import json
 import os
 import re
 import sys
-from typing import Optional, Tuple, Dict, Any
+from typing import Optional, Tuple, Dict, Any, List
 
 import requests
 from haystack import Pipeline
@@ -64,14 +64,18 @@ def generate_pr_text(
         data={"messages": [ChatMessage.from_assistant(invocation_payload)], "service_openapi_spec": openapi_spec}
     )
 
-    github_service_response = service_response["openapi_container"]["service_response"]
+    github_service_response: List[ChatMessage] = service_response["openapi_container"]["service_response"]
+    github_service_response_json = json.loads(github_service_response[0].content)
+    # take the diff files portion of the response to save tokens and to fit into the smaller LLM context windows
+    # other parts of the response are not relevant for PR text generation
+    # and only waste token$ and LLM context window
+    diff_message = ChatMessage.from_user(json.dumps(github_service_response_json["files"]))
+
     system_message = ChatMessage.from_system(read_system_message())
     if custom_instruction:
-        github_pr_prompt_messages = (
-            [system_message] + github_service_response + [ChatMessage.from_user(custom_instruction)]
-        )
+        github_pr_prompt_messages = [system_message] + [diff_message] + [ChatMessage.from_user(custom_instruction)]
     else:
-        github_pr_prompt_messages = [system_message] + github_service_response
+        github_pr_prompt_messages = [system_message] + [diff_message]
 
     gen_pr_text_pipeline = Pipeline()
     # empirically, max_tokens 2560 is enough to generate a PR text
