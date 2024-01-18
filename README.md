@@ -63,7 +63,7 @@ jobs:
         with:
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
           openai_base_url: https://api.fireworks.ai/inference/v1
-          generation_model: accounts/fireworks/models/yi-34b-200k-capybara
+          generation_model: accounts/fireworks/models/mixtral-8x7b-instruct
           user_prompt: ${{ github.event.pull_request.body }}
       - name: Fetch PR details for comment event
         if: github.event_name == 'issue_comment' && github.event.issue.pull_request
@@ -83,9 +83,9 @@ jobs:
           target_branch: ${{ fromJson(steps.pr_details.outputs.data).base.ref }}
           source_branch: ${{ fromJson(steps.pr_details.outputs.data).head.ref }}
           pull_request_number: ${{ github.event.issue.number }}
-          generation_model: accounts/fireworks/models/yi-34b-200k-capybara
+          generation_model: accounts/fireworks/models/mixtral-8x7b-instruct
 ```
-This workflow will run the action on pull request open, edit, and reopen events. It will also run the action on issue comment events on pull requests. Note that it uses fireworks.ai as an LLM provider and a very capable model named accounts/fireworks/models/yi-34b-200k-capybara LLM. This particular LLM has produced PR text descriptions on par with gpt-4.
+This workflow triggers the action on pull request open, edit, and reopen events. Additionally, it activates the action on issue comment events in pull requests. It's important to note that it utilizes fireworks.ai as an LLM provider, specifically the highly capable open-source LLM accounts/fireworks/models/mixtral-8x7b-instruct. This specific LLM has generated PR text descriptions comparable to those of gpt-4.
 
 ## GitHub Action Inputs
 
@@ -176,12 +176,11 @@ project, repository, and branches you wish to compare, and ensure the security o
 
 ### 1) Which LLM should I choose for PR text generation?
 
-When selecting an LLM for PR text generation, it is crucial to consider the model's ability to handle long contexts, as
-it needs to process all the PR diffs. We have tested (January 2024) models like yi-34b-200k-capybara and gpt-4-1106-preview.
-While yi-34b-200k-capybara is a very capable model that produces excellent results in about 80-90% of PRs, sometimes
-the output format is not respected, leading to less pristine PRs. On the other hand, gpt-4-1106-preview has shown
-consistent excellence in generating PR descriptions. Therefore, we recommend gpt-4-1106-preview for consistent quality
-but encourage experimentation to find the best fit for your specific needs.
+When choosing LLMs for generating PR text, it's essential to consider the model's capability to handle long contexts,
+as it's required to process all the PR diffs. As of January 2024, we've tested models like mixtral-8x7b-instruct,
+yi-34b-200k-capybara, and gpt-4-1106-preview. Both mixtral-8x7b-instruct and gpt-4 have demonstrated consistent
+excellence in producing PR descriptions. Therefore, we recommend either of these LLMs for consistent quality, but
+also encourage experimentation to identify the most suitable option for your specific requirements.
 
 ### 2) How do I use custom prompts to guide LLM in generating PR text?
 
@@ -235,9 +234,9 @@ for the detailed procedure and adapt the instructions to fit your specific setup
 ### 7) I'm concerned about the PR text generation costs, how can I minimize them?
 
 Managing costs is a critical aspect of using LLMs for PR text generation. As of January 2024, the cost per PR using the
-large context gpt-4 model is approximately 10 cents, whereas using the capybara model on fireworks.ai is about 2-3
-cents. It's worth noting that these costs are continually evolving and generally expected to decrease over time. To
-precisely monitor and manage your expenditure, especially if you are using platforms like OpenAI, you can set
+large context gpt-4 model is approximately a few cents, whereas using the mixtral-8x7b-instruct on fireworks.ai is less than
+a cent per PR. It's worth noting that these costs are continually evolving and generally expected to further decrease
+over time. To precisely monitor and manage your expenditure, especially if you are using platforms like OpenAI, you can set
 the `OPENAI_ORG_ID` environment variable to track costs accurately. This will help you keep a close eye on your usage
 and optimize accordingly to minimize expenses. Keep in mind that selecting the right model for your needs and
 monitoring the market for the best rates are effective strategies to control costs.
