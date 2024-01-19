@@ -1,3 +1,4 @@
+import hashlib
 import json
 import os
 import re
@@ -126,6 +127,20 @@ def contains_skip_instruction(text):
     return bool(re.search(r"\bskip\b", text, re.IGNORECASE))
 
 
+def write_to_github_output(output_name: str, output_value: str):
+    hash_object = hashlib.sha256("some_random_data".encode())
+    delimiter = hash_object.hexdigest()
+
+    github_env = os.environ.get("GITHUB_OUTPUT", None)
+
+    if github_env:
+        # Write to the GITHUB_OUTPUT file
+        with open(github_env, 'a') as env_file:
+            env_file.write(f"{output_name}<<{delimiter}\n")
+            env_file.write(f"{output_value}\n")
+            env_file.write(f"{delimiter}\n")
+
+
 if __name__ == "__main__":
     required_env_vars = {
         "GITHUB_TOKEN": "Please provide GITHUB_TOKEN as environment variable.",
@@ -192,5 +207,8 @@ if __name__ == "__main__":
     if attribution_message:
         generated_pr_text = f"{generated_pr_text}\n\n{attribution_message}"
 
-    print(f"::set-output name=generated_pr_text::{generated_pr_text}")
-    print(f"::set-output name=generated_pr_text_stats::{str(generated_pr_text_message.meta)}")
+    print(f"{generated_pr_text}\n\n{generated_pr_text_message.meta}")
+
+    write_to_github_output("generated_pr_text", generated_pr_text)
+    write_to_github_output("generated_pr_text_stats", str(generated_pr_text_message.meta))
+
