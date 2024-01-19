@@ -1,3 +1,4 @@
+import hashlib
 import json
 import os
 import re
@@ -192,5 +193,13 @@ if __name__ == "__main__":
     if attribution_message:
         generated_pr_text = f"{generated_pr_text}\n\n{attribution_message}"
 
-    print(f"::set-output name=generated_pr_text::{generated_pr_text}")
+    # we need to delimit multi line response for GitHub Action outputs
+    # see https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#multiline-strings
+
+    hash_object = hashlib.sha256("This could be any string".encode())
+    hash_hex = hash_object.hexdigest()
+    delimiter = hash_object.hexdigest()
+    begin_delimiter = f"<<{delimiter}"
+
+    print(f"::set-output name=generated_pr_text{begin_delimiter}::{generated_pr_text}{delimiter}")
     print(f"::set-output name=generated_pr_text_stats::{str(generated_pr_text_message.meta)}")
