@@ -15,12 +15,21 @@ jobs:
 
       - name: Run for PR
         if: github.event_name == 'pull_request'
+        id: auto-pr-writer
         uses: ./
         with:
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
           openai_base_url: https://api.fireworks.ai/inference/v1
           generation_model: accounts/fireworks/models/mixtral-8x7b-instruct
           user_prompt: ${{ github.event.pull_request.body }}
+
+      - name: Update PR Description
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: ${{ steps.auto-pr-writer.outputs.generated_pr_text }}
+
       - name: Debug PR Number
         if: github.event_name == 'issue_comment' && github.event.issue.pull_request
         run: echo ${{ github.event.issue.number }}

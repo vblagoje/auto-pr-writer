@@ -48,7 +48,7 @@ inputs:
 
 runs:
   using: 'docker'
-  image: 'docker://vblagoje/auto-pr-writer:latest'
+  image: 'docker://vblagoje/auto-pr-writer:no-update'
   env:
     OPENAI_API_KEY: ${{ inputs.openai_api_key }}
     OPENAI_BASE_URL: ${{ inputs.openai_base_url }}
