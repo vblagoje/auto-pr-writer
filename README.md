@@ -90,6 +90,9 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'issue_comment' && github.event.issue.pull_request && contains(github.event.comment.body, '@auto-pr-writer-bot')
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+            
       - name: Fetch PR details for comment event
         id: pr_details
         uses: octokit/request-action@v2.x
@@ -116,7 +119,10 @@ jobs:
           body: ${{ steps.auto_pr_writer_for_comment.outputs.generated_pr_text }}
           token: ${{ secrets.GITHUB_TOKEN }}
 ```
-This workflow triggers the action on pull request open, edit, and reopen events. Additionally, it activates the action on issue comment events in pull requests. It's important to note that it utilizes fireworks.ai as an LLM provider, specifically the highly capable open-source LLM accounts/fireworks/models/mixtral-8x7b-instruct. This specific LLM has generated PR text descriptions comparable to those of gpt-4.
+This workflow triggers the action on pull request open, edit, and reopen events. Additionally, it activates the action on issue comment events in pull requests when the comment contains `@auto-pr-writer-bot`. 
+If you change the `bot_name` input in your workflow, make sure to update the `contains(github.event.comment.body, '@auto-pr-writer-bot')` condition accordingly in your workflow.
+
+It's important to note that it utilizes fireworks.ai as an LLM provider, specifically the highly capable open-source LLM accounts/fireworks/models/mixtral-8x7b-instruct. This specific LLM has generated PR text descriptions comparable to those of gpt-4.
 
 ## GitHub Action Inputs
 
@@ -159,10 +165,6 @@ System message/prompt to help the model generate the PR description.
 #### `user_prompt`
 **Optional**
 Additional user prompt to help the model generate the PR description.
-
-#### `event_name`
-**Optional**
-The name of the GitHub event that triggered the workflow. Useful for the underlying Python script to determine whether the action is run on a pull request or an issue comment event. Defaults to github.event_name variable.
 
 #### `bot_name`
 **Optional**
