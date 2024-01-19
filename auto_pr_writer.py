@@ -171,21 +171,6 @@ if __name__ == "__main__":
         print("Exiting auto-pr-writer, user instruction contains the word 'skip'.")
         sys.exit(0)
 
-    # Leave "pull_request" as default event type so that we can run the auto-pr-writer locally or via Docker
-    # without having to set the event type explicitly
-    event_type = os.environ.get("EVENT_NAME", "pull_request")
-
-    # we run the auto-pr-writer for pull requests open and comments on PRs with custom instructions only
-    should_run = event_type == "pull_request" or (event_type == "issue_comment" and custom_user_instruction)
-
-    if not should_run:
-        print(
-            f"Exiting auto-pr-writer, event type is {event_type}."
-            "auto-pr-writer runs for pull requests open/reopen and comments on PRs with custom "
-            f"@{bot_name} instructions only"
-        )
-        sys.exit(0)
-
     # Fetch required information from environment variables or command-line arguments
     if len(sys.argv) < 2:
         github_repository, base_ref, head_ref = (

@@ -65,12 +65,12 @@ on:
 jobs:
   generate-pr-text-on-opened-pr:
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Run Auto PR Writer on initial open PR
-        if: github.event_name == 'pull_request'
+      - name: Run Auto PR Writer on initial open PR        
         id: auto_pr_writer_for_pr
         uses: vblagoje/auto-pr-writer@v2
         with:
@@ -80,7 +80,6 @@ jobs:
           user_prompt: ${{ github.event.pull_request.body }}
 
       - name: Update PR description
-        if: github.event_name == 'pull_request'
         uses: riskledger/update-pr-description@v2
         with:
           body: ${{ steps.auto_pr_writer_for_pr.outputs.generated_pr_text }}
@@ -89,9 +88,9 @@ jobs:
 
   generate-pr-text-on-pr-comment:
     runs-on: ubuntu-latest
+    if: github.event_name == 'issue_comment' && github.event.issue.pull_request && contains(github.event.comment.body, '@auto-pr-writer-bot')
     steps:
       - name: Fetch PR details for comment event
-        if: github.event_name == 'issue_comment' && github.event.issue.pull_request
         id: pr_details
         uses: octokit/request-action@v2.x
         with:
@@ -100,7 +99,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run Auto PR Writer on PR comment
-        if: github.event_name == 'issue_comment' && github.event.issue.pull_request
         uses: vblagoje/auto-pr-writer@v2
         id: auto_pr_writer_for_comment
         with:
@@ -113,7 +111,6 @@ jobs:
           generation_model: accounts/fireworks/models/mixtral-8x7b-instruct
 
       - name: Update PR description
-        if: github.event_name == 'issue_comment' && github.event.issue.pull_request
         uses: riskledger/update-pr-description@v2
         with:
           body: ${{ steps.auto_pr_writer_for_comment.outputs.generated_pr_text }}
