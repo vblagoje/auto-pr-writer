@@ -28,6 +28,7 @@ jobs:
         uses: peter-evans/create-or-update-comment@v3
         with:
           issue-number: ${{ github.event.pull_request.number }}
+          edit-mode: replace
           body: ${{ steps.auto_pr_writer_for_pr.outputs.generated_pr_text }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -61,5 +62,6 @@ jobs:
         uses: peter-evans/create-or-update-comment@v3
         with:
           issue-number: ${{ github.event.issue.number }}
+          edit-mode: replace
           body: ${{ steps.auto_pr_writer_for_comment.outputs.generated_pr_text }}
           token: ${{ secrets.GITHUB_TOKEN }}
