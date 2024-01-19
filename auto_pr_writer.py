@@ -128,14 +128,22 @@ def contains_skip_instruction(text):
 
 
 def write_to_github_output(output_name: str, output_value: str):
+    """
+    Writes the output_name and output_value pair to the GITHUB_OUTPUT file in the format expected by GitHub Actions.
+    :param output_name: The name of the output.
+    :param output_value: The value of the output.
+    """
+
+    # needed because by default multiple lines outputs are not supported in GitHub Actions
+    # see https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#multiline-strings
     hash_object = hashlib.sha256("some_random_data".encode())
     delimiter = hash_object.hexdigest()
 
     github_env = os.environ.get("GITHUB_OUTPUT", None)
 
     if github_env:
-        # Write to the GITHUB_OUTPUT file
-        with open(github_env, 'a') as env_file:
+        # Write to the GITHUB_OUTPUT file only if we are running in GitHub Actions
+        with open(github_env, "a") as env_file:
             env_file.write(f"{output_name}<<{delimiter}\n")
             env_file.write(f"{output_value}\n")
             env_file.write(f"{delimiter}\n")
@@ -193,7 +201,7 @@ if __name__ == "__main__":
         )
         sys.exit(1)
 
-    # Ok, we are go, generate PR text
+    # Ok, we are gtg, generate PR text
     generated_pr_text_message = generate_pr_text(
         github_repo=github_repository,
         base_branch=base_ref,
@@ -207,8 +215,9 @@ if __name__ == "__main__":
     if attribution_message:
         generated_pr_text = f"{generated_pr_text}\n\n{attribution_message}"
 
+    # output the generated PR text and the generation statistics to the console (i.e. for docker experiments)
     print(f"{generated_pr_text}\n\n{generated_pr_text_message.meta}")
 
+    # write the generated PR text and the generation statistics to the GITHUB_OUTPUT file
     write_to_github_output("generated_pr_text", generated_pr_text)
     write_to_github_output("generated_pr_text_stats", str(generated_pr_text_message.meta))
-
