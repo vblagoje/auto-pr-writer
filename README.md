@@ -25,16 +25,28 @@ on:
     types: [opened]
 
 jobs:
-  generate-pr-text:
+    generate-pr-text-on-opened-pr:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Run auto-pr-writer action
-        uses: vblagoje/auto-pr-writer@v1
+      - name: Run Auto PR Writer on initial open PR
+        if: github.event_name == 'pull_request'
+        id: auto_pr_writer_for_pr
+        uses: vblagoje/auto-pr-writer@v2
         with:
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+          openai_base_url: https://api.fireworks.ai/inference/v1
+          generation_model: accounts/fireworks/models/mixtral-8x7b-instruct
+          user_prompt: ${{ github.event.pull_request.body }}
+
+      - name: Update PR description
+        if: github.event_name == 'pull_request'
+        uses: riskledger/update-pr-description@v2
+        with:
+          body: ${{ steps.auto_pr_writer_for_pr.outputs.generated_pr_text }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ## Advanced Example Workflow
@@ -51,20 +63,33 @@ on:
     types: [created]
 
 jobs:
-  generate-pr-text:
+  generate-pr-text-on-opened-pr:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Run for PR
+      - name: Run Auto PR Writer on initial open PR
         if: github.event_name == 'pull_request'
-        uses: vblagoje/auto-pr-writer@v1
+        id: auto_pr_writer_for_pr
+        uses: vblagoje/auto-pr-writer@v2
         with:
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
           openai_base_url: https://api.fireworks.ai/inference/v1
           generation_model: accounts/fireworks/models/mixtral-8x7b-instruct
           user_prompt: ${{ github.event.pull_request.body }}
+
+      - name: Update PR description
+        if: github.event_name == 'pull_request'
+        uses: riskledger/update-pr-description@v2
+        with:
+          body: ${{ steps.auto_pr_writer_for_pr.outputs.generated_pr_text }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+
+  generate-pr-text-on-pr-comment:
+    runs-on: ubuntu-latest
+    steps:
       - name: Fetch PR details for comment event
         if: github.event_name == 'issue_comment' && github.event.issue.pull_request
         id: pr_details
@@ -73,9 +98,11 @@ jobs:
           route: GET /repos/${{ github.repository }}/pulls/${{ github.event.issue.number }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Run for comment
+
+      - name: Run Auto PR Writer on PR comment
         if: github.event_name == 'issue_comment' && github.event.issue.pull_request
-        uses: vblagoje/auto-pr-writer@v1
+        uses: vblagoje/auto-pr-writer@v2
+        id: auto_pr_writer_for_comment
         with:
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
           openai_base_url: https://api.fireworks.ai/inference/v1
@@ -84,6 +111,13 @@ jobs:
           source_branch: ${{ fromJson(steps.pr_details.outputs.data).head.ref }}
           pull_request_number: ${{ github.event.issue.number }}
           generation_model: accounts/fireworks/models/mixtral-8x7b-instruct
+
+      - name: Update PR description
+        if: github.event_name == 'issue_comment' && github.event.issue.pull_request
+        uses: riskledger/update-pr-description@v2
+        with:
+          body: ${{ steps.auto_pr_writer_for_comment.outputs.generated_pr_text }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 ```
 This workflow triggers the action on pull request open, edit, and reopen events. Additionally, it activates the action on issue comment events in pull requests. It's important to note that it utilizes fireworks.ai as an LLM provider, specifically the highly capable open-source LLM accounts/fireworks/models/mixtral-8x7b-instruct. This specific LLM has generated PR text descriptions comparable to those of gpt-4.
 
@@ -178,7 +212,7 @@ project, repository, and branches you wish to compare, and ensure the security o
 
 When choosing LLMs for generating PR text, it's essential to consider the model's capability to handle long contexts,
 as it's required to process all the PR diffs. As of January 2024, we've tested models like mixtral-8x7b-instruct,
-yi-34b-200k-capybara, and gpt-4-1106-preview. Both mixtral-8x7b-instruct and gpt-4 have demonstrated consistent
+yi-34b-200k-capybara, and gpt-4 variants. Both mixtral-8x7b-instruct and gpt-4 have demonstrated consistent
 excellence in producing PR descriptions. Therefore, we recommend either of these LLMs for consistent quality, but
 also encourage experimentation to identify the most suitable option for your specific requirements.
 
@@ -233,13 +267,13 @@ for the detailed procedure and adapt the instructions to fit your specific setup
 
 ### 7) I'm concerned about the PR text generation costs, how can I minimize them?
 
-Managing costs is a critical aspect of using LLMs for PR text generation. As of January 2024, the cost per PR using the
-large context gpt-4 model is approximately a few cents, whereas using the mixtral-8x7b-instruct on fireworks.ai is less than
-a cent per PR. It's worth noting that these costs are continually evolving and generally expected to further decrease
-over time. To precisely monitor and manage your expenditure, especially if you are using platforms like OpenAI, you can set
-the `OPENAI_ORG_ID` environment variable to track costs accurately. This will help you keep a close eye on your usage
-and optimize accordingly to minimize expenses. Keep in mind that selecting the right model for your needs and
-monitoring the market for the best rates are effective strategies to control costs.
+Managing costs is a critical aspect of using LLMs for PR text generation. As of January 2024, depending on the size of
+the PR diff, a typical cost per PR using gpt-4 model is approximately a few cents, whereas using the
+mixtral-8x7b-instruct on fireworks.ai is less than a cent per PR. To precisely monitor and manage your costs,
+especially if you are using platforms like OpenAI, you can set the `OPENAI_ORG_ID` environment variable to track costs
+accurately. This will help you keep a close eye on your usage and optimize accordingly to minimize expenses. Keep in
+mind that selecting the right model for your needs and monitoring the market for the best rates among various LLM
+platforms are effective strategies to control costs.
 
 ## License
 This project is licensed under [Apache 2.0 License](LICENSE).
