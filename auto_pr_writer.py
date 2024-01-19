@@ -2,9 +2,8 @@ import json
 import os
 import re
 import sys
-from typing import Optional, Tuple, Dict, Any, List
+from typing import Optional, Dict, Any, List
 
-import requests
 from haystack import Pipeline
 from haystack.components.connectors import OpenAPIServiceConnector
 from haystack.components.generators.chat import OpenAIChatGenerator
@@ -83,31 +82,6 @@ def generate_pr_text(
     return final_result["llm"]["replies"][0]
 
 
-def update_pr_description(repo: str, pr_number_id: str, description: str, token: str) -> Tuple[int, Dict[str, Any]]:
-    """
-    Updates the description of a GitHub Pull Request.
-
-    This function is used to update the PR description on GitHub. It sends a PATCH request to the GitHub API with
-    the new description.
-
-    :param repo: The GitHub repository in the format 'owner/repo'.
-    :type repo: str
-    :param pr_number_id: The number of the pull request to be updated.
-    :type pr_number_id: str
-    :param description: The new description text for the pull request.
-    :type description: str
-    :param token: GitHub access token used for authentication.
-    :type token: str
-    :return: A tuple containing the status code of the response and the response JSON.
-    :rtype: tuple
-    """
-    url = f"https://api.github.com/repos/{repo}/pulls/{pr_number_id}"
-    headers = {"Authorization": f"token {token}", "Content-Type": "application/json"}
-    data = {"body": description}
-    resp = requests.patch(url, headers=headers, data=json.dumps(data))
-    return resp.status_code, resp.json()
-
-
 def extract_custom_instruction(bot_name: str, user_instruction: str) -> str:
     """
     Extracts custom instruction from a user instruction string by searching for specific pattern in the user
@@ -146,10 +120,6 @@ def create_invocation_payload(base_ref: str, head_ref: str, repository: str, pro
         "type": "function",
     }
     return invocation_payload
-
-
-def is_verbose():
-    return os.environ.get("VERBOSE", "true").lower() == "true"
 
 
 def contains_skip_instruction(text):
@@ -222,23 +192,5 @@ if __name__ == "__main__":
     if attribution_message:
         generated_pr_text = f"{generated_pr_text}\n\n{attribution_message}"
 
-    if is_verbose():
-        print(generated_pr_text)
-        if generated_pr_text_message.meta:
-            print(f"\n\nLLM PR text generation statistics: {generated_pr_text_message.meta}")
-
-    # Update the PR description if all conditions are met
-    github_token, pr_number = (os.environ.get(var) for var in ["GITHUB_TOKEN", "PR_NUMBER"])
-
-    if all([github_token, github_repository, pr_number, generated_pr_text]):
-        status_code, response = update_pr_description(github_repository, pr_number, generated_pr_text, github_token)
-        if status_code == 200:
-            print(f"Successfully updated PR description for PR #{pr_number} in {github_repository}.")
-        else:
-            print(f"Failed to update PR description for PR #{pr_number} in {github_repository}.")
-            print(f"Status code: {status_code}")
-            print(f"Response: {response}")
-            sys.exit(status_code)
-    else:
-        print("Not updating PR description.")
-        print("Ensure GITHUB_TOKEN, GITHUB_REPOSITORY, PR_NUMBER are set to update the PR description.")
+    print(f"::set-output name=generated_pr_text::{generated_pr_text}")
+    print(f"::set-output name=generated_pr_text_stats::{str(generated_pr_text_message.meta)}")
