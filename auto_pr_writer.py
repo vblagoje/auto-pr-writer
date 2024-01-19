@@ -71,10 +71,15 @@ def generate_pr_text(
     diff_message = ChatMessage.from_user(json.dumps(github_service_response_json["files"]))
 
     system_message = ChatMessage.from_system(read_system_message())
+
+    print(custom_instruction)
+
     if custom_instruction:
-        github_pr_prompt_messages = [system_message] + [diff_message] + [ChatMessage.from_user(custom_instruction)]
+        github_pr_prompt_messages = [system_message] + [diff_message] #+ [ChatMessage.from_user(custom_instruction)]
+        print(f"custom_instruction {github_pr_prompt_messages}")
     else:
         github_pr_prompt_messages = [system_message] + [diff_message]
+        print(f"No custom_instruction {github_pr_prompt_messages}")
 
     gen_pr_text_pipeline = Pipeline()
     # empirically, max_tokens 2560 is enough to generate a PR text
