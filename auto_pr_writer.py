@@ -10,9 +10,6 @@ from haystack.components.connectors import OpenAPIServiceConnector
 from haystack.components.generators.chat import OpenAIChatGenerator
 from haystack.dataclasses import ChatMessage
 
-# Configuration: Assign the bot name from environment variables with a default value
-AUTO_PR_WRITER_BOT_NAME = os.environ.get("AUTO_PR_WRITER_BOT_NAME", "auto-pr-writer-bot")
-
 
 def read_system_message() -> str:
     return os.environ.get("AUTO_PR_WRITER_SYSTEM_MESSAGE") or open("system_prompt.txt").read()
@@ -111,21 +108,22 @@ def update_pr_description(repo: str, pr_number_id: str, description: str, token:
     return resp.status_code, resp.json()
 
 
-def extract_custom_instruction(user_instruction: str) -> str:
+def extract_custom_instruction(bot_name: str, user_instruction: str) -> str:
     """
     Extracts custom instruction from a user instruction string by searching for specific pattern in the user
     instruction string to find and return custom instructions.
 
-    The function uses regular expressions to find the custom instruction following the '@AUTO_PR_WRITER_BOT_NAME' mention
-    in the user instruction.
+    The function uses regular expressions to find the custom instruction following the bot name in the user instruction
 
+    :param bot_name: The name of the bot to search for in the user instruction string.
+    :type bot_name: str
     :param user_instruction: The complete user instruction string, potentially containing custom instructions.
     :type user_instruction: str
     :return: The extracted custom instruction, if found; otherwise, an empty string.
     :rtype: str
     """
-    # Search for the message following @AUTO_PR_WRITER_BOT_NAME
-    match = re.search(rf"@{re.escape(AUTO_PR_WRITER_BOT_NAME)}\s+(.*)", user_instruction)
+    # Search for the message following @bot_name
+    match = re.search(rf"@{re.escape(bot_name)}\s+(.*)", user_instruction)
     return match.group(1) if match else ""
 
 
@@ -164,13 +162,17 @@ if __name__ == "__main__":
         "OPENAI_API_KEY": "Please set OPENAI_API_KEY environment variable to your OpenAI API key.",
     }
 
+    # account for the bot name being set to "" or None, use default value if not set
+    env_var_tmp = os.environ.get("AUTO_PR_WRITER_BOT_NAME")
+    bot_name = "auto-pr-writer-bot" if not env_var_tmp else env_var_tmp
+
     for var, msg in required_env_vars.items():
         if not os.environ.get(var):
             print(msg)
             sys.exit(1)
 
     user_message = os.environ.get("AUTO_PR_WRITER_USER_MESSAGE")
-    custom_user_instruction = extract_custom_instruction(user_message) if user_message else None
+    custom_user_instruction = extract_custom_instruction(bot_name, user_message) if user_message else None
 
     if custom_user_instruction and contains_skip_instruction(custom_user_instruction):
         print("Exiting auto-pr-writer, user instruction contains the word 'skip'.")
@@ -187,7 +189,7 @@ if __name__ == "__main__":
         print(
             f"Exiting auto-pr-writer, event type is {event_type}."
             "auto-pr-writer runs for pull requests open/reopen and comments on PRs with custom "
-            f"@{AUTO_PR_WRITER_BOT_NAME} instructions only"
+            f"@{bot_name} instructions only"
         )
         sys.exit(0)
 
