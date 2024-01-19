@@ -25,11 +25,10 @@ jobs:
 
       - name: Update PR description
         if: github.event_name == 'pull_request'
-        uses: peter-evans/create-or-update-comment@v3
+        uses: riskledger/update-pr-description@v2
         with:
-          issue-number: ${{ github.event.pull_request.number }}
-          edit-mode: replace
-          body: ${{ steps.auto_pr_writer_for_pr.outputs.generated_pr_text }}
+          body: |
+            ${{ steps.auto_pr_writer_for_pr.outputs.generated_pr_text }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Debug PR Number
@@ -59,9 +58,8 @@ jobs:
 
       - name: Update PR description
         if: github.event_name == 'issue_comment' && github.event.issue.pull_request
-        uses: peter-evans/create-or-update-comment@v3
+        uses: riskledger/update-pr-description@v2
         with:
-          issue-number: ${{ github.event.issue.number }}
-          edit-mode: replace
-          body: ${{ steps.auto_pr_writer_for_comment.outputs.generated_pr_text }}
+          body: |
+            ${{ steps.auto_pr_writer_for_comment.outputs.generated_pr_text }}
           token: ${{ secrets.GITHUB_TOKEN }}
