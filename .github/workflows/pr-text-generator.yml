@@ -58,7 +58,18 @@ jobs:
           generation_model: accounts/fireworks/models/mixtral-8x7b-instruct
 
       - name: Update PR description
-        uses: riskledger/update-pr-description@v2
+        uses: actions/github-script@v5
         with:
-          body: ${{ steps.auto_pr_writer_for_comment.outputs.generated_pr_text }}
+          script: |
+            const body = core.getInput('body', { required: true });
+            const prNum = github.event.issue.number;
+            const [repoOwner, repoName] = process.env.GITHUB_REPOSITORY.split('/');
+
+            await github.rest.pulls.update({
+              owner: repoOwner,
+              repo: repoName,
+              pull_number: prNum,
+              body: body
+            });
           token: ${{ secrets.GITHUB_TOKEN }}
+          body: ${{ steps.auto_pr_writer_for_comment.outputs.generated_pr_text }}
