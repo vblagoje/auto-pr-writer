@@ -36,9 +36,6 @@ inputs:
   user_prompt:
     description: Additional prompt to help the model generate the PR description
     required: false
-  event_name:
-    description: The name of the GitHub event that triggered the workflow
-    default: ${{ github.event_name }}
   bot_name:
     description: The name of the bot so users can guide LLM generation with @bot_name from PR comments
     default: auto-pr-writer-bot
@@ -60,6 +57,5 @@ runs:
     GENERATION_MODEL: ${{ inputs.generation_model }}
     AUTO_PR_WRITER_SYSTEM_MESSAGE: ${{ inputs.system_prompt }}
     AUTO_PR_WRITER_USER_MESSAGE: ${{ inputs.user_prompt }}
-    EVENT_NAME: ${{ inputs.event_name }}
     AUTO_PR_WRITER_BOT_NAME: ${{ inputs.bot_name }}
     AUTO_PR_WRITER_ATTRIBUTION_MESSAGE: ${{ inputs.attribution }}
