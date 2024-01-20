@@ -126,7 +126,6 @@ jobs:
               pull_number: prNum,
               body: body
             });
-          token: ${{ secrets.GITHUB_TOKEN }}
 ```
 This workflow triggers the action on pull request open, edit, and reopen events. Additionally, it activates the action on issue comment events in pull requests when the comment contains `@auto-pr-writer-bot`. 
 If you change the `bot_name` input in your workflow, make sure to update the `contains(github.event.comment.body, '@auto-pr-writer-bot')` condition accordingly in your workflow.
