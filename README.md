@@ -28,9 +28,6 @@ jobs:
     generate-pr-text-on-opened-pr:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
       - name: Run Auto PR Writer on initial open PR
         if: github.event_name == 'pull_request'
         id: auto_pr_writer_for_pr
