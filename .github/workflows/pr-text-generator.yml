@@ -26,7 +26,7 @@ jobs:
       - name: Update PR description
         uses: vblagoje/update-pr@v1
         with:
-          body: ${{ steps.auto_pr_writer_for_pr.outputs.generated_pr_text }}
+          pr-body: ${{ steps.auto_pr_writer_for_pr.outputs.generated_pr_text }}
 
 
   generate-pr-text-on-pr-comment:
