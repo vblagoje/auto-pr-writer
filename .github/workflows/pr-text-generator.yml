@@ -70,4 +70,3 @@ jobs:
               pull_number: prNum,
               body: body
             });
-          token: ${{ secrets.GITHUB_TOKEN }}
