@@ -116,6 +116,7 @@ jobs:
       - name: Update PR description
         uses: actions/github-script@v5
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }} 
           script: |
             const body = "${{ steps.auto_pr_writer_for_comment.outputs.generated_pr_text }}";
             const prNum = ${{ github.event.issue.number }};

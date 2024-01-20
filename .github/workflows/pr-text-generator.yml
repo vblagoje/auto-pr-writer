@@ -58,11 +58,12 @@ jobs:
           generation_model: accounts/fireworks/models/mixtral-8x7b-instruct
 
       - name: Update PR description
+        env:
+          PR_BODY: ${{ steps.auto_pr_writer_for_comment.outputs.generated_pr_text }}
         uses: actions/github-script@v5
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const body = "${{ steps.auto_pr_writer_for_comment.outputs.generated_pr_text }}";
+            const body = process.env.PR_BODY;
             const prNum = ${{ github.event.issue.number }};
 
             github.rest.pulls.update({
