@@ -61,15 +61,13 @@ jobs:
         uses: actions/github-script@v5
         with:
           script: |
-            const body = core.getInput('body', { required: true });
-            const prNum = github.event.issue.number;
-            const [repoOwner, repoName] = process.env.GITHUB_REPOSITORY.split('/');
+            const body = "${{ steps.auto_pr_writer_for_comment.outputs.generated_pr_text }}";
+            const prNum = ${{ github.event.issue.number }};
 
-            await github.rest.pulls.update({
-              owner: repoOwner,
-              repo: repoName,
+            github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
               pull_number: prNum,
               body: body
             });
           token: ${{ secrets.GITHUB_TOKEN }}
-          body: ${{ steps.auto_pr_writer_for_comment.outputs.generated_pr_text }}
