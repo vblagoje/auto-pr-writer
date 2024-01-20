@@ -39,11 +39,9 @@ jobs:
           user_prompt: ${{ github.event.pull_request.body }}
 
       - name: Update PR description
-        if: github.event_name == 'pull_request'
-        uses: riskledger/update-pr-description@v2
+        uses: vblagoje/update-pr@v1
         with:
-          body: ${{ steps.auto_pr_writer_for_pr.outputs.generated_pr_text }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          pr-body: ${{ steps.auto_pr_writer_for_pr.outputs.generated_pr_text }}
 ```
 
 ## Advanced Example Workflow
@@ -74,10 +72,9 @@ jobs:
           user_prompt: ${{ github.event.pull_request.body }}
 
       - name: Update PR description
-        uses: riskledger/update-pr-description@v2
+        uses: vblagoje/update-pr@v1
         with:
-          body: ${{ steps.auto_pr_writer_for_pr.outputs.generated_pr_text }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          pr-body: ${{ steps.auto_pr_writer_for_pr.outputs.generated_pr_text }}
 
 
   generate-pr-text-on-pr-comment:
@@ -103,21 +100,11 @@ jobs:
           source_branch: ${{ fromJson(steps.pr_details.outputs.data).head.ref }}
           generation_model: accounts/fireworks/models/mixtral-8x7b-instruct
 
-      - name: Update PR description
-        env:
-          PR_BODY: ${{ steps.auto_pr_writer_for_comment.outputs.generated_pr_text }}
-        uses: actions/github-script@v5
+      - name: Update Pull Request Description
+        uses: vblagoje/update-pr@v1
         with:
-          script: |
-            const body = process.env.PR_BODY;
-            const prNum = ${{ github.event.issue.number }};
-
-            github.rest.pulls.update({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: prNum,
-              body: body
-            });
+          pr-body: ${{ steps.auto_pr_writer_for_comment.outputs.generated_pr_text }}
+          pr-number: ${{ github.event.issue.number }}
 ```
 This workflow triggers the action on pull request open, edit, and reopen events. Additionally, it activates the action on issue comment events in pull requests when the comment contains `@auto-pr-writer-bot`. 
 If you change the `bot_name` input in your workflow, make sure to update the `contains(github.event.comment.body, '@auto-pr-writer-bot')` condition accordingly in your workflow.
