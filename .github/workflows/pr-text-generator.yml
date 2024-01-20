@@ -54,7 +54,6 @@ jobs:
           user_prompt: ${{ github.event.comment.body }}
           target_branch: ${{ fromJson(steps.pr_details.outputs.data).base.ref }}
           source_branch: ${{ fromJson(steps.pr_details.outputs.data).head.ref }}
-          pull_request_number: ${{ github.event.issue.number }}
           generation_model: accounts/fireworks/models/mixtral-8x7b-instruct
 
       - name: Update PR description

@@ -67,9 +67,6 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
       - name: Run Auto PR Writer on initial open PR        
         id: auto_pr_writer_for_pr
         uses: vblagoje/auto-pr-writer@v2
@@ -89,10 +86,7 @@ jobs:
   generate-pr-text-on-pr-comment:
     runs-on: ubuntu-latest
     if: github.event_name == 'issue_comment' && github.event.issue.pull_request && contains(github.event.comment.body, '@auto-pr-writer-bot')
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-            
+    steps:   
       - name: Fetch PR details for comment event
         id: pr_details
         uses: octokit/request-action@v2.x
@@ -110,7 +104,6 @@ jobs:
           user_prompt: ${{ github.event.comment.body }}
           target_branch: ${{ fromJson(steps.pr_details.outputs.data).base.ref }}
           source_branch: ${{ fromJson(steps.pr_details.outputs.data).head.ref }}
-          pull_request_number: ${{ github.event.issue.number }}
           generation_model: accounts/fireworks/models/mixtral-8x7b-instruct
 
       - name: Update PR description
@@ -147,10 +140,6 @@ The OpenAI API key for authentication. Note that this key could be from other LL
 #### `openai_base_url`
 **Optional**
 The base URL for the OpenAI API. Using this input one can use different LLM providers (e.g. fireworks.ai, together.xyz, anyscale, octoai etc.) Defaults to https://api.openai.com/v1
-
-#### `pull_request_number`
-**Optional**
-The number of the pull request where the action is run. Defaults to the current PR number.
 
 #### `github_repository`
 **Optional**

@@ -15,9 +15,6 @@ inputs:
   github_token:
     description: GITHUB_TOKEN or a repo scoped PAT
     default: ${{ github.token }}
-  pull_request_number:
-    description: Pull request number
-    default: ${{ github.event.pull_request.number }}
   github_repository:
     description: GitHub repository
     default: ${{ github.repository }}
@@ -50,7 +47,6 @@ runs:
     OPENAI_API_KEY: ${{ inputs.openai_api_key }}
     OPENAI_BASE_URL: ${{ inputs.openai_base_url }}
     GITHUB_TOKEN: ${{ inputs.github_token }}
-    PR_NUMBER: ${{ inputs.pull_request_number }}
     GITHUB_REPOSITORY: ${{ inputs.github_repository }}
     BASE_REF: ${{ inputs.target_branch }}
     HEAD_REF: ${{ inputs.source_branch }}
