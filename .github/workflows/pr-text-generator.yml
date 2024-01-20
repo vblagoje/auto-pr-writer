@@ -26,7 +26,7 @@ jobs:
       - name: Update PR description
         uses: vblagoje/update-pr@v1
         with:
-          pr-body: ${{ steps.auto_pr_writer_for_pr.outputs.generated_pr_text }}
+          pr-body: "Some text to be replaced by the action"
           pr-number: ${{ github.event.pull_request.number }}
 
 
