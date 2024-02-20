@@ -1,4 +1,5 @@
 # Auto PR Writer
+## This project has been archived and succeeded by https://github.com/vblagoje/auto-pr
 
 ![License](https://img.shields.io/github/license/vblagoje/auto-pr-writer)
 ![Last Commit](https://img.shields.io/github/last-commit/vblagoje/auto-pr-writer)
